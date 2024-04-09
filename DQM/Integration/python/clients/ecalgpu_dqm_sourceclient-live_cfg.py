@@ -80,15 +80,15 @@ process.ecalMonitorTask.commonParameters.onlineMode = True
 # Default value is cms.untracked.InputTag("ecalDigis")
 # Tag is changed below to avoid multiple warnings per event
 if process.runType.getRunType() == process.runType.pp_run:
-    process.ecalMonitorTask.collectionTags.EcalRawData = cms.untracked.InputTag("hltEcalDigisCPUSerial")
+    process.ecalMonitorTask.collectionTags.EcalRawData = cms.untracked.InputTag("hltEcalDigisSerialSync")
 
     # Streams used for online GPU validation
-    process.ecalMonitorTask.collectionTags.EBCpuDigi = cms.untracked.InputTag("hltEcalDigisCPUSerial", "ebDigis")
-    process.ecalMonitorTask.collectionTags.EECpuDigi = cms.untracked.InputTag("hltEcalDigisCPUSerial", "eeDigis")
+    process.ecalMonitorTask.collectionTags.EBCpuDigi = cms.untracked.InputTag("hltEcalDigisSerialSync", "ebDigis")
+    process.ecalMonitorTask.collectionTags.EECpuDigi = cms.untracked.InputTag("hltEcalDigisSerialSync", "eeDigis")
     process.ecalMonitorTask.collectionTags.EBGpuDigi = cms.untracked.InputTag("hltEcalDigis", "ebDigis")
     process.ecalMonitorTask.collectionTags.EEGpuDigi = cms.untracked.InputTag("hltEcalDigis", "eeDigis")
-    process.ecalMonitorTask.collectionTags.EBCpuUncalibRecHit = cms.untracked.InputTag("hltEcalUncalibRecHitCPUSerial", "EcalUncalibRecHitsEB")
-    process.ecalMonitorTask.collectionTags.EECpuUncalibRecHit = cms.untracked.InputTag("hltEcalUncalibRecHitCPUSerial", "EcalUncalibRecHitsEE")
+    process.ecalMonitorTask.collectionTags.EBCpuUncalibRecHit = cms.untracked.InputTag("hltEcalUncalibRecHitSerialSync", "EcalUncalibRecHitsEB")
+    process.ecalMonitorTask.collectionTags.EECpuUncalibRecHit = cms.untracked.InputTag("hltEcalUncalibRecHitSerialSync", "EcalUncalibRecHitsEE")
     process.ecalMonitorTask.collectionTags.EBGpuUncalibRecHit = cms.untracked.InputTag("hltEcalUncalibRecHit", "EcalUncalibRecHitsEB")
     process.ecalMonitorTask.collectionTags.EEGpuUncalibRecHit = cms.untracked.InputTag("hltEcalUncalibRecHit", "EcalUncalibRecHitsEE")
 else:
