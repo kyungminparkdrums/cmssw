@@ -8,8 +8,16 @@
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 #include "CommonTools/Utils/interface/StringObjectFunction.h"
 
+#include "DataFormats/L1TParticleFlow/interface/layer1_emulator.h"
+#include "conifer.h"
+
 #include <vector>
 #include <cmath>
+
+// Initialize conifer
+typedef ap_fixed<21, 12, AP_RND_CONV, AP_SAT> bdt_feature_t;
+typedef ap_fixed<12, 3, AP_RND_CONV, AP_SAT> bdt_score_t;
+conifer::BDT<bdt_feature_t, ap_fixed<12, 3, AP_RND_CONV, AP_SAT>, false> *multiclass_bdt_;
 
 namespace l1tpf {
   class HGC3DClusterID {
