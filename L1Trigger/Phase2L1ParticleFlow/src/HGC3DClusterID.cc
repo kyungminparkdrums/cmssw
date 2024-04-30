@@ -7,12 +7,28 @@ l1tpf::HGC3DClusterID::HGC3DClusterID(const edm::ParameterSet &pset) {
   }
 }
 
-
 void l1tpf::HGC3DClusterID::evaluate(const l1t::HGCalMulticluster &cl, l1t::PFCluster &cpf) const {
-  //Here we run the model and get the scores
-  float puScore = 0; 
-  float emScore = 0;
-  float piScore = 0;
+  // Inference of the conifer BDT model
+  multiclass_bdt_ = new conifer::BDT<bdt_feature_t, bdt_score_t, false>("../data/multiclassID/conifer_bridge_1712763069.so");
+
+  // Input for the BDT: showerlength, coreshowerlength, eot, eta, meanz, seetot, spptot, szz
+  bdt_feature_t showerlength = cl.showerLength();
+  bdt_feature_t coreshowerlength = cl.coreShowerLength();
+  bdt_feature_t eot = cl.eot();
+  bdt_feature_t eta = std::abs(cl.eta()); // take absolute values for eta for BDT input
+  bdt_feature_t meanz = cl.zBarycenter();
+  bdt_feature_t seetot = cl.sigmaEtaEtaTot();
+  bdt_feature_t spptot = cl.sigmaPhiPhiTot();
+  bdt_feature_t szz = cl.sigmaZZ();
+
+  // Run BDT inference
+  std::vector<bdt_feature_t> inputs = {showerlength, coreshowerlength, eot, eta, meanz, seetot, spptot, szz};
+  std::vector<bdt_score_t> bdt_score = multiclass_bdt_->decision_function(inputs);
+
+  // BDT score
+  float puScore = bdt_score[0];
+  float emScore = bdt_score[2];
+  float piScore = bdt_score[1];
 
   cpf.setPuIDScore(puScore);
   cpf.setEmIDScore(emScore);
