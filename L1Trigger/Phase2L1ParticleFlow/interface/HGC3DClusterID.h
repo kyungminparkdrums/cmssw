@@ -13,23 +13,27 @@
 
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
-// Initialize conifer
+// For conifer model inference
 typedef ap_fixed<21, 12, AP_RND_CONV, AP_SAT> bdt_feature_t;
 typedef ap_fixed<12, 3, AP_RND_CONV, AP_SAT> bdt_score_t;
 conifer::BDT<bdt_feature_t, ap_fixed<12, 3, AP_RND_CONV, AP_SAT>, false> *multiclass_bdt_;
+
+std::vector<bdt_feature_t> inputs;
+std::vector<bdt_score_t> bdt_score;
 
 namespace l1tpf {
   class HGC3DClusterID {
   public:
     HGC3DClusterID(const edm::ParameterSet &pset);
 
-    void evaluate(const l1t::HGCalMulticluster &cl, l1t::PFCluster &cpf) const;
+    float evaluate(const l1t::HGCalMulticluster &cl, l1t::PFCluster &cpf);
 
-    bool passPuID(l1t::PFCluster &cpf);
-    bool passPFEmID(l1t::PFCluster &cpf);
-    bool passEgEmID(l1t::PFCluster &cpf);
-    bool passPiID(l1t::PFCluster &cpf);
+    bool passPuID(l1t::PFCluster &cpf, float maxScore);
+    bool passPFEmID(l1t::PFCluster &cpf, float maxScore);
+    bool passEgEmID(l1t::PFCluster &cpf, float maxScore);
+    bool passPiID(l1t::PFCluster &cpf, float maxScore);
 
   private:
     class Var {
