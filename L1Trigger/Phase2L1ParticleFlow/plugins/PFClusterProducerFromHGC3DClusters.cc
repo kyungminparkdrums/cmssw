@@ -123,7 +123,7 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
     }
 
     l1t::PFCluster cluster(pt, it->eta(), it->phi(), hoe);
-    multiClassPID_.evaluate(*it, cluster);
+    float maxScore = multiClassPID_.evaluate(*it, cluster);
 
     if (scenario_ == UseEmInterp::EmOnly) {  // for emID objs, use EM interp as pT and set H = 0
       if (isEM) {
@@ -150,14 +150,14 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
       //        3, pt, it->eta(), em_old, em_new, hoe, cluster.pt(), cluster.emEt(), cluster.hOverE());
     }
 
-    if (!multiClassPID_.passPuID(cluster)) {
+    if (!multiClassPID_.passPuID(cluster, maxScore)) {
       continue;
     }
 
     if (!emOnly_) {
-      isEM = multiClassPID_.passPFEmID(cluster);
+      isEM = multiClassPID_.passPFEmID(cluster, maxScore);
     }
-    cluster.setHwQual((isEM ? 1 : 0) + (multiClassPID_.passEgEmID(cluster) << 1));
+    cluster.setHwQual((isEM ? 1 : 0) + (multiClassPID_.passEgEmID(cluster, maxScore) << 1));
 
     if (corrector_.valid())
       corrector_.correctPt(cluster);
