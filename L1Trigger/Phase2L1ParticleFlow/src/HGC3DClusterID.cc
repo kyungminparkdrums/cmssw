@@ -1,16 +1,11 @@
 #include "L1Trigger/Phase2L1ParticleFlow/interface/HGC3DClusterID.h"
 
 l1tpf::HGC3DClusterID::HGC3DClusterID(const edm::ParameterSet &pset) {
-  // first create all the variables
-  for (const auto &psvar : pset.getParameter<std::vector<edm::ParameterSet>>("variables")) {
-    variables_.emplace_back(psvar.getParameter<std::string>("name"), psvar.getParameter<std::string>("value"));
-  }
+  // Inference of the conifer BDT model
+  multiclass_bdt_ = new conifer::BDT<bdt_feature_t, bdt_score_t, false>(edm::FileInPath(pset.getParameter<std::string>("model")).fullPath());
 }
 
 float l1tpf::HGC3DClusterID::evaluate(const l1t::HGCalMulticluster &cl, l1t::PFCluster &cpf) {
-  // Inference of the conifer BDT model
-  multiclass_bdt_ = new conifer::BDT<bdt_feature_t, bdt_score_t, false>("../data/multiclassID/my_prj.json");
-
   // Input for the BDT: showerlength, coreshowerlength, eot, eta, meanz, seetot, spptot, szz
   bdt_feature_t showerlength = cl.showerLength();
   bdt_feature_t coreshowerlength = cl.coreShowerLength();
