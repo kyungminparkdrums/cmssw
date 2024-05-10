@@ -150,7 +150,7 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
       //        3, pt, it->eta(), em_old, em_new, hoe, cluster.pt(), cluster.emEt(), cluster.hOverE());
     }
 
-    if (!multiClassPID_.passPuID(cluster, maxScore)) {
+    if (multiClassPID_.passPuID(cluster, maxScore)) {
       continue;
     }
 
