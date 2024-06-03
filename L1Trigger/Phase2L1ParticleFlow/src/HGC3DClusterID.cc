@@ -39,21 +39,21 @@ float l1tpf::HGC3DClusterID::evaluate(const l1t::HGCalMulticluster &cl, l1t::PFC
 bool l1tpf::HGC3DClusterID::passPuID(l1t::PFCluster &cpf, float maxScore) {
   // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
   bool isMax = cpf.puIDScore() == maxScore;
-  float puWP = 0.33; // dummy WP for now
+  float puWP = -10; // dummy WP for now
   return isMax & (cpf.puIDScore() > puWP);
 }
 
 bool l1tpf::HGC3DClusterID::passPFEmID(l1t::PFCluster &cpf, float maxScore) {
   // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
   bool isMax = cpf.emIDScore() == maxScore;
-  float egWP = 0.33; // dummy one for now
+  float egWP = -10; // dummy one for now
   return isMax & (cpf.emIDScore() > egWP);
 }
 
 bool l1tpf::HGC3DClusterID::passEgEmID(l1t::PFCluster &cpf, float maxScore) {
   // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
   bool isMax = cpf.emIDScore() == maxScore;
-  float egWP = 0.33; // dummy one for now
+  float egWP = -10; // dummy one for now
   return isMax & (cpf.emIDScore() > egWP);
 }
 
@@ -61,6 +61,6 @@ bool l1tpf::HGC3DClusterID::passEgEmID(l1t::PFCluster &cpf, float maxScore) {
 bool l1tpf::HGC3DClusterID::passPiID(l1t::PFCluster &cpf, float maxScore) {
   // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
   bool isMax = cpf.piIDScore() == maxScore;
-  float piWP = 0.33; // dummy one for now
+  float piWP = -10; // dummy one for now
   return isMax & (cpf.piIDScore() > piWP);
 }
