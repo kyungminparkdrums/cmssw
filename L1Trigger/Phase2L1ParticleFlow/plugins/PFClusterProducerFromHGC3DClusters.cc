@@ -123,16 +123,12 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
     }
 
     l1t::PFCluster cluster(pt, it->eta(), it->phi(), hoe);
-    //float maxScore = multiClassPID_.evaluate(*it, cluster);
 
     if (scenario_ == UseEmInterp::EmOnly) {  // for emID objs, use EM interp as pT and set H = 0
       if (isEM) {
         float pt_new = it->iPt(l1t::HGCalMulticluster::EnergyInterpretation::EM);
         float hoe_new = 0.;
         cluster = l1t::PFCluster(pt_new, it->eta(), it->phi(), hoe_new, /*isEM=*/isEM);
-	//cluster.setHOverE(hoe_new);
-	//cluster.setIsEM(isEM);
-        //cluster.calibratePt(pt_new, false); // setting preserveEmEt to false because HoE recalculation is already done here
       }
     } else if (scenario_ == UseEmInterp::AllKeepHad) {  // for all objs, replace EM part with EM interp, preserve H
       float had_old = pt - cluster.emEt();
@@ -142,9 +138,6 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
       // FIXME: -1 can be a problem for later stages of the processing. For now we set it to something which saturates the hoe variable
       float hoe_new = em_new > 0 ? (had_old / em_new) : 999;
       cluster = l1t::PFCluster(pt_new, it->eta(), it->phi(), hoe_new, /*isEM=*/isEM);
-      //cluster.setHOverE(hoe_new);
-      //cluster.setIsEM(isEM);
-      //cluster.calibratePt(pt_new, false); // setting preserveEmEt to false because HoE recalculation is already done here
       //printf("Scenario %d: pt %7.2f eta %+5.3f em %7.2f, EMI %7.2f, h/e % 8.3f --> pt %7.2f, em %7.2f, h/e % 8.3f\n",
       //        2, pt, it->eta(), em_old, em_new, hoe, cluster.pt(), cluster.emEt(), cluster.hOverE());
     } else if (scenario_ == UseEmInterp::AllKeepTot) {  // for all objs, replace EM part with EM interp, preserve pT
@@ -152,8 +145,6 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
       float em_new = it->iPt(l1t::HGCalMulticluster::EnergyInterpretation::EM);
       float hoe_new = em_new > 0 ? (it->pt() / em_new - 1) : -1;
       cluster = l1t::PFCluster(it->pt(), it->eta(), it->phi(), hoe_new, /*isEM=*/isEM);
-      //cluster.setHOverE(hoe_new);
-      //cluster.setIsEM(isEM);
       //printf("Scenario %d: pt %7.2f eta %+5.3f em %7.2f, EMI %7.2f, h/e % 8.3f --> pt %7.2f, em %7.2f, h/e % 8.3f\n",
       //        3, pt, it->eta(), em_old, em_new, hoe, cluster.pt(), cluster.emEt(), cluster.hOverE());
     }
