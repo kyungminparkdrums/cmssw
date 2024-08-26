@@ -80,7 +80,6 @@ namespace l1t {
     float egVsPUMVAOut() const { return egVsPUMVAOut_; }
     void setEgVsPUMVAOut(float egVsPUMVAOut) { egVsPUMVAOut_ = egVsPUMVAOut; }
 
-<<<<<<< HEAD
     void setPuIDScore(float score) { puIdScore_ = score; }
     float puIDScore() const { return puIdScore_; }
 
@@ -90,14 +89,10 @@ namespace l1t {
     void setPiIDScore(float score) { piIdScore_ = score; }
     float piIDScore() const { return piIdScore_; }
 
-
-
-=======
     uint64_t digiWord() const { return digiData_; }
     void setDigiWord(uint64_t data) {
       digiData_ = data;
     }
->>>>>>> 065684c664d (Switch to emulated crystal clusters and store digitized version in PFClusters)
 
   private:
     float hOverE_, ptError_, egVsPionMVAOut_, egVsPUMVAOut_;
