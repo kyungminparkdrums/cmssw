@@ -37,12 +37,13 @@ l1tPFClustersFromHGC3DClusters = cms.EDProducer("PFClusterProducerFromHGC3DClust
     multiClassPID = cms.PSet(
         isPUFilter = cms.bool(False),
         preselection = cms.string(""),
-        model = cms.string("L1Trigger/Phase2L1ParticleFlow/data/multiclassID/my_prj.json"),
+        #model = cms.string("L1Trigger/Phase2L1ParticleFlow/data/multiclassID/model_classSF_maxdepth6_18p8quant.json"),
+        model = cms.string("L1Trigger/Phase2L1ParticleFlow/data/multiclassID/model_classSF_maxdepth6_20p10quant_meanzoffset.json"),
         variables = cms.VPSet(
             cms.PSet(name = cms.string("showerlength"), value = cms.string("showerLength()")),
             cms.PSet(name = cms.string("coreshowerlength"), value = cms.string("coreShowerLength()")),
             cms.PSet(name = cms.string("eot"), value = cms.string("eot()")),
-            cms.PSet(name = cms.string("eta"), value = cms.string("eta()")),
+            cms.PSet(name = cms.string("eta"), value = cms.string("abs(eta())")),
             cms.PSet(name = cms.string("meanz"), value = cms.string("zBarycenter()")),
             cms.PSet(name = cms.string("seetot"), value = cms.string("sigmaEtaEtaTot()")),
             cms.PSet(name = cms.string("spptot"), value = cms.string("sigmaPhiPhiTot()")),
