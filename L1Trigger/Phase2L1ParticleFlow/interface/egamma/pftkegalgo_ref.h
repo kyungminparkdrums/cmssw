@@ -34,7 +34,7 @@ namespace l1ct {
     std::vector<double> dEtaValues;
     std::vector<double> dPhiValues;
     float trkQualityPtMin;  // GeV
-    bool doCompositeTkEle;
+    unsigned int algorithm;
     unsigned int nCompCandPerCluster;
     bool writeEgSta;
 
@@ -92,7 +92,7 @@ namespace l1ct {
                         const std::vector<double> &dEtaValues = {0.015, 0.01},
                         const std::vector<double> &dPhiValues = {0.07, 0.07},
                         float trkQualityPtMin = 10.,
-                        bool doCompositeTkEle = false,
+                        unsigned int algo = 0,
                         unsigned int nCompCandPerCluster = 4,
                         bool writeEgSta = false,
                         const IsoParameters &tkIsoParams_tkEle = {2., 0.6, 0.03, 0.2},
@@ -122,7 +122,7 @@ namespace l1ct {
           dEtaValues(dEtaValues),
           dPhiValues(dPhiValues),
           trkQualityPtMin(trkQualityPtMin),
-          doCompositeTkEle(doCompositeTkEle),
+          algorithm(algo),
           nCompCandPerCluster(nCompCandPerCluster),
           writeEgSta(writeEgSta),
           tkIsoParams_tkEle(tkIsoParams_tkEle),
@@ -163,6 +163,9 @@ namespace l1ct {
     typedef ap_fixed<21, 12, AP_RND_CONV, AP_SAT> bdt_feature_t;
     typedef ap_fixed<12, 3, AP_RND_CONV, AP_SAT> bdt_score_t;
 
+    typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_eb_feature_t;
+    typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_eb_score_t;
+
   private:
     void link_emCalo2emCalo(const std::vector<EmCaloObjEmu> &emcalo, std::vector<int> &emCalo2emCalo) const;
 
@@ -176,6 +179,12 @@ namespace l1ct {
                                   const std::vector<TkObjEmu> &track,
                                   std::vector<int> &emCalo2tk,
                                   std::vector<id_score_t> &emCaloTkBdtScore) const;
+
+    void link_emCalo2tk_composite_eb(const PFRegionEmu &r,
+                                    const std::vector<EmCaloObjEmu> &emcalo,
+                                    const std::vector<TkObjEmu> &track,
+                                    std::vector<int> &emCalo2tk,
+                                    std::vector<id_score_t> &emCaloTkBdtScore) const;
 
     struct CompositeCandidate {
       unsigned int cluster_idx;

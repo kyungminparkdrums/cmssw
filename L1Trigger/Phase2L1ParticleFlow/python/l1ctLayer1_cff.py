@@ -87,6 +87,10 @@ l1tLayer1Barrel = cms.EDProducer("L1TCorrelatorLayer1Producer",
         nTRACK_EGIN = 13,
         nEMCALO_EGIN = 10,
         nEM_EGOUT = 10,
+        algorithm = 2,
+        compositeParametersTkEle = cms.PSet(
+            model=cms.string("L1Trigger/Phase2L1ParticleFlow/data/my_prj.json")
+        )
     ),
     tkEgSorterAlgo = cms.string("Barrel"),
     tkEgSorterParameters = tkEgSorterParameters.clone(
@@ -231,7 +235,7 @@ l1tLayer1HGCal = cms.EDProducer("L1TCorrelatorLayer1Producer",
         doEndcapHwQual = True,
         writeBeforeBremRecovery = False,
         writeEGSta = True,
-        doCompositeTkEle = True,
+        algorithm = 1,
         trkQualityPtMin = 0.), # This should be 10 GeV when doCompositeTkEle = False
     tkEgSorterAlgo = cms.string("Endcap"),
     tkEgSorterParameters = tkEgSorterParameters.clone(
@@ -263,7 +267,7 @@ l1tLayer1HGCalExtended = l1tLayer1HGCal.clone(tracks = ('l1tPFTracksFromL1Tracks
 
 l1tLayer1HGCalElliptic = l1tLayer1HGCal.clone(
     tkEgAlgoParameters = l1tLayer1HGCal.tkEgAlgoParameters.clone(
-        doCompositeTkEle = False,
+        algorithm = 0,
         trkQualityPtMin = 10.)
 )
 
