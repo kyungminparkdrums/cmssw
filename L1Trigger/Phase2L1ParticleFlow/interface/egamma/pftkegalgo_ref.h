@@ -6,7 +6,8 @@
 #include "DataFormats/L1TParticleFlow/interface/pf.h"
 #include "L1Trigger/Phase2L1ParticleFlow/interface/common/inversion.h"
 
-#include "conifer.h"
+#include "L1Trigger/Phase2L1ParticleFlow/interface/conifer.h"
+// #include "conifer.h"
 
 namespace edm {
   class ParameterSet;
@@ -197,6 +198,13 @@ namespace l1ct {
                                        const std::vector<TkObjEmu> &track,
                                        const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
 
+    id_score_t compute_composite_score_eb(CompositeCandidate &cand,
+                                          float sumTkPt,
+                                          unsigned int nTkMatch,
+                                       const std::vector<EmCaloObjEmu> &emcalo,
+                                       const std::vector<TkObjEmu> &track,
+                                       const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
+
     //FIXME: still needed
     float deltaPhi(float phi1, float phi2) const;
 
@@ -369,7 +377,9 @@ namespace l1ct {
                            z0_t z0) const;
 
     PFTkEGAlgoEmuConfig cfg;
-    conifer::BDT<bdt_feature_t, ap_fixed<12, 3, AP_RND_CONV, AP_SAT>, false> *composite_bdt_;
+    conifer::BDT<bdt_feature_t, bdt_score_t> *composite_bdt_;
+    conifer::BDT<bdt_eb_feature_t, bdt_eb_score_t> *composite_bdt_eb_;
+
     int debug_;
   };
 }  // namespace l1ct
