@@ -396,18 +396,18 @@ id_score_t PFTkEGAlgoEmulator::compute_composite_score_eb(CompositeCandidate &ca
   bdt_eb_feature_t cltk_absDeta = fabs(pfcl->eta() - pftk->eta());
   bdt_eb_feature_t cltk_absDphi = fabs(pfcl->phi() - pftk->phi());
 
-  std::cout << "features: "
-    << " cl_pt: " << cl_pt
-    << " cl_ss: " << cl_ss
-    << " cl_relIso: " << cl_relIso
-    << " cl_staWP: " << cl_staWP
-    << " cl_looseTkWP: " << cl_looseTkWP
-    << " tk_chi2RPhi: " << tk_chi2RPhi
-    << " tk_ptFrac: " << tk_ptFrac
-    << " cltk_ptRatio: " << cltk_ptRatio
-    << " cltk_nTkMatch: " << cltk_nTkMatch
-    << " cltk_absDeta: " << cltk_absDeta
-    << " cltk_absDphi: " << cltk_absDphi << std::endl;
+  // std::cout << "features: "
+  //   << " cl_pt: " << cl_pt
+  //   << " cl_ss: " << cl_ss
+  //   << " cl_relIso: " << cl_relIso
+  //   << " cl_staWP: " << cl_staWP
+  //   << " cl_looseTkWP: " << cl_looseTkWP
+  //   << " tk_chi2RPhi: " << tk_chi2RPhi
+  //   << " tk_ptFrac: " << tk_ptFrac
+  //   << " cltk_ptRatio: " << cltk_ptRatio
+  //   << " cltk_nTkMatch: " << cltk_nTkMatch
+  //   << " cltk_absDeta: " << cltk_absDeta
+  //   << " cltk_absDphi: " << cltk_absDphi << std::endl;
 
 // 400fb-1 7.5*10^34 -> 60gg
     // "CryClu_pt",
@@ -426,7 +426,7 @@ id_score_t PFTkEGAlgoEmulator::compute_composite_score_eb(CompositeCandidate &ca
   // Run BDT inference
   std::vector<bdt_eb_feature_t> inputs = {cl_pt, cl_ss, cl_relIso, cl_staWP, cl_looseTkWP, tk_chi2RPhi, tk_ptFrac, cltk_ptRatio, cltk_nTkMatch, cltk_absDeta, cltk_absDphi};
   std::vector<bdt_eb_score_t> bdt_score = composite_bdt_eb_->decision_function(inputs);
-  std::cout << "  out BDT score: " << bdt_score[0] << std::endl;
+  // std::cout << "  out BDT score: " << bdt_score[0] << std::endl;
   return bdt_score[0] / 4;
 }
 
@@ -663,7 +663,7 @@ EGIsoEleObjEmu &PFTkEGAlgoEmulator::addEGIsoEleToPF(std::vector<EGIsoEleObjEmu> 
           bin_index = pt_bins.size() - 1 - 1;  // Second last index
       }
 
-      isTight = (bdtScore > id_score_t(tight_wps[bin_index]));
+      isTight = (bdtScore > id_score_t(tight_wps[bin_index]/4.));
 
       if (bin_index < pt_bins.size() - 1) {
           std::cout << "pt_value " << pt_value << " is in bin index " << bin_index << std::endl;
