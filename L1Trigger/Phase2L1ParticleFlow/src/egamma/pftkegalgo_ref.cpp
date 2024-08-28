@@ -639,41 +639,31 @@ EGIsoEleObjEmu &PFTkEGAlgoEmulator::addEGIsoEleToPF(std::vector<EGIsoEleObjEmu> 
   egiso.hwEta = calo.hwEta;
   egiso.hwPhi = calo.hwPhi;
   unsigned int egHwQual = hwQual;
-  if (cfg.doEndcapHwQual) {
-    if (cfg.algorithm == 1) {
-      // tight ele WP is set for tight BDT score
-      egHwQual = (hwQual & 0x9) | ((bdtScore >= cfg.compIDparams.bdtScore_tight_wp) << 1);
-    } else if(cfg.algorithm == 2) {
-      vector<float> pt_bins = {0,5,10,20,30,50};
-      vector<float> tight_wps = {
-            1.2367626271489272,
-            0.3639653772014115,
-          -0.8472978603872036,
-          -0.8953840470548413,
-          -0.7537718023763801,
-          -0.6190392084062235,};
+  if (cfg.algorithm == 1) {
+    // tight ele WP is set for tight BDT score
+    egHwQual = (hwQual & 0x9) | ((bdtScore >= cfg.compIDparams.bdtScore_tight_wp) << 1);
+  } else if(cfg.algorithm == 2) {
+    vector<float> pt_bins = {0,5,10,20,30,50};
+    vector<float> tight_wps = {
+          1.2367626271489272,
+          0.3639653772014115,
+        -0.8472978603872036,
+        -0.8953840470548413,
+        -0.7537718023763801,
+        -0.6190392084062235,};
 
-      bool isTight = false;
-      // std::upper_bound returns an iterator to the first element in pt_bins that is greater than pt_value
-      float pt_value = egiso.floatPt();
-      auto it = std::upper_bound(pt_bins.begin(), pt_bins.end(), pt_value);
-      unsigned int bin_index = it - pt_bins.begin() - 1;
-      // Handle the case where pt_value falls into the open-ended last bin
-      if (pt_value >= pt_bins.back()) {
-          bin_index = pt_bins.size() - 1 - 1;  // Second last index
-      }
+    bool isTight = false;
+    // std::upper_bound returns an iterator to the first element in pt_bins that is greater than pt_value
+    float pt_value = egiso.floatPt();
+    auto it = std::upper_bound(pt_bins.begin(), pt_bins.end(), pt_value);
+    unsigned int bin_index = it - pt_bins.begin() - 1;
+    
+    isTight = (bdtScore > id_score_t(tight_wps[bin_index]/4.));
 
-      isTight = (bdtScore > id_score_t(tight_wps[bin_index]/4.));
-
-      if (bin_index < pt_bins.size() - 1) {
-          std::cout << "pt_value " << pt_value << " is in bin index " << bin_index << std::endl;
-      } else {
-          std::cout << "pt_value " << pt_value << " is out of range." << std::endl;
-      }
-
-      // tight ele WP is set for tight BDT score
-      egHwQual = (hwQual & 0x9) | (isTight << 1);    
-    } else {
+    // tight ele WP is set for tight BDT score
+    egHwQual = (hwQual & 0x9) | (isTight << 1);    
+  } else {
+    if (cfg.doEndcapHwQual) {
       // 1. zero-suppress the loose EG-ID (bit 1)
       // 2. for now use the standalone tight definition (bit 0) to set the tight point for eles (bit 1)
       egHwQual = (hwQual & 0x9) | ((hwQual & 0x1) << 1);
