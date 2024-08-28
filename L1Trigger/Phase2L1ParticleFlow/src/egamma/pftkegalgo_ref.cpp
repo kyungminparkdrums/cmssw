@@ -391,7 +391,7 @@ id_score_t PFTkEGAlgoEmulator::compute_composite_score_eb(CompositeCandidate &ca
   bdt_eb_feature_t cl_looseTkWP = digiCl.passes_looseTkiso() && digiCl.passes_looseTkss();
   bdt_eb_feature_t tk_chi2RPhi = pftk->trackWord().getChi2RPhi();
   bdt_eb_feature_t tk_ptFrac = pftk->pt()/sumTkPt;
-  bdt_eb_feature_t cltk_ptRatio = pftk->pt()/pfcl->pt();
+  bdt_eb_feature_t cltk_ptRatio = pfcl->pt()/pftk->pt();
   bdt_eb_feature_t cltk_nTkMatch = nTkMatch;
   bdt_eb_feature_t cltk_absDeta = fabs(pfcl->eta() - pftk->eta());
   bdt_eb_feature_t cltk_absDphi = fabs(pfcl->phi() - pftk->phi());
