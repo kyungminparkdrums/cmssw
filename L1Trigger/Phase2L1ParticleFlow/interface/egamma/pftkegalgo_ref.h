@@ -167,6 +167,9 @@ namespace l1ct {
     typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_eb_feature_t;
     typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_eb_score_t;
 
+    typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_ee_feature_t;
+    typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_ee_score_t;
+
   private:
     void link_emCalo2emCalo(const std::vector<EmCaloObjEmu> &emcalo, std::vector<int> &emCalo2emCalo) const;
 
@@ -181,11 +184,17 @@ namespace l1ct {
                                   std::vector<int> &emCalo2tk,
                                   std::vector<id_score_t> &emCaloTkBdtScore) const;
 
-    void link_emCalo2tk_composite_eb(const PFRegionEmu &r,
+    void link_emCalo2tk_composite_eb_ee(const PFRegionEmu &r,
                                     const std::vector<EmCaloObjEmu> &emcalo,
                                     const std::vector<TkObjEmu> &track,
                                     std::vector<int> &emCalo2tk,
                                     std::vector<id_score_t> &emCaloTkBdtScore) const;
+
+    // void link_emCalo2tk_composite_ee(const PFRegionEmu &r,
+    //                                 const std::vector<EmCaloObjEmu> &emcalo,
+    //                                 const std::vector<TkObjEmu> &track,
+    //                                 std::vector<int> &emCalo2tk,
+    //                                 std::vector<id_score_t> &emCaloTkBdtScore) const;
 
     struct CompositeCandidate {
       unsigned int cluster_idx;
@@ -204,6 +213,14 @@ namespace l1ct {
                                        const std::vector<EmCaloObjEmu> &emcalo,
                                        const std::vector<TkObjEmu> &track,
                                        const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
+
+    id_score_t compute_composite_score_ee(CompositeCandidate &cand,
+                                          float sumTkPt,
+                                          unsigned int nTkMatch,
+                                       const std::vector<EmCaloObjEmu> &emcalo,
+                                       const std::vector<TkObjEmu> &track,
+                                       const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
+
 
     //FIXME: still needed
     float deltaPhi(float phi1, float phi2) const;
@@ -379,6 +396,7 @@ namespace l1ct {
     PFTkEGAlgoEmuConfig cfg;
     conifer::BDT<bdt_feature_t, bdt_score_t> *composite_bdt_;
     conifer::BDT<bdt_eb_feature_t, bdt_eb_score_t> *composite_bdt_eb_;
+    conifer::BDT<bdt_ee_feature_t, bdt_ee_score_t> *composite_bdt_ee_;
 
     int debug_;
   };

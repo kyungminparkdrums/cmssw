@@ -4,6 +4,8 @@
 #include "DataFormats/L1TParticleFlow/interface/PFTrack.h"
 #include "DataFormats/L1TCalorimeterPhase2/interface/DigitizedClusterCorrelator.h"
 #include "DataFormats/L1TCalorimeterPhase2/interface/CaloCrystalCluster.h"
+#include "DataFormats/L1THGCal/interface/HGCalMulticluster.h"
+
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
@@ -128,8 +130,8 @@ edm::ParameterSetDescription l1ct::PFTkEGAlgoEmuConfig::CompIDParameters::getPar
 #endif
 
 PFTkEGAlgoEmulator::PFTkEGAlgoEmulator(const PFTkEGAlgoEmuConfig &config)
-    : cfg(config), composite_bdt_(nullptr), composite_bdt_eb_(nullptr), debug_(cfg.debug) {
-  if (cfg.algorithm == 1 || cfg.algorithm == 2) {
+    : cfg(config), composite_bdt_(nullptr), composite_bdt_eb_(nullptr), composite_bdt_ee_(nullptr), debug_(cfg.debug) {
+  if (cfg.algorithm == 1 || cfg.algorithm == 2 || cfg.algorithm == 3) {
 #ifdef CMSSW_GIT_HASH
     auto resolvedFileName = edm::FileInPath(cfg.compIDparams.conifer_model).fullPath();
 #else
@@ -140,6 +142,9 @@ PFTkEGAlgoEmulator::PFTkEGAlgoEmulator(const PFTkEGAlgoEmuConfig &config)
     } else if(cfg.algorithm == 2) {
       // std::cout << resolvedFileName << std::endl;
       composite_bdt_eb_ = new conifer::BDT<bdt_eb_feature_t, bdt_eb_score_t, false>(resolvedFileName);
+    } else if(cfg.algorithm == 3) {
+      // std::cout << "algo 3: " << resolvedFileName << std::endl;
+      composite_bdt_ee_ = new conifer::BDT<bdt_ee_feature_t, bdt_ee_score_t, false>(resolvedFileName);
     }
   }
 }
@@ -306,7 +311,7 @@ void PFTkEGAlgoEmulator::link_emCalo2tk_composite(const PFRegionEmu &r,
   }
 }
 
-void PFTkEGAlgoEmulator::link_emCalo2tk_composite_eb(const PFRegionEmu &r,
+void PFTkEGAlgoEmulator::link_emCalo2tk_composite_eb_ee(const PFRegionEmu &r,
                                                   const std::vector<EmCaloObjEmu> &emcalo,
                                                   const std::vector<TkObjEmu> &track,
                                                   std::vector<int> &emCalo2tk,
@@ -355,7 +360,12 @@ void PFTkEGAlgoEmulator::link_emCalo2tk_composite_eb(const PFRegionEmu &r,
     for (unsigned int icand = 0; icand < nCandPerCluster; icand++) {
       auto &cand = candidates[icand];
       const std::vector<EmCaloObjEmu> &emcalo_sel = emcalo;
-      id_score_t score = compute_composite_score_eb(cand, sumTkPt, nTkMatch, emcalo_sel, track, cfg.compIDparams);
+      id_score_t score = 0;
+      if(cfg.algorithm == 2) {
+        score = compute_composite_score_eb(cand, sumTkPt, nTkMatch, emcalo_sel, track, cfg.compIDparams);
+      } else if(cfg.algorithm == 3) {
+        score = compute_composite_score_ee(cand, sumTkPt, nTkMatch, emcalo_sel, track, cfg.compIDparams);
+      }
       if ((score > cfg.compIDparams.bdtScore_loose_wp) && (score > maxScore)) {
         maxScore = score;
         ibest = icand;
@@ -430,6 +440,67 @@ id_score_t PFTkEGAlgoEmulator::compute_composite_score_eb(CompositeCandidate &ca
   return bdt_score[0] / 4;
 }
 
+id_score_t PFTkEGAlgoEmulator::compute_composite_score_ee(CompositeCandidate &cand,
+                                                          float sumTkPt,
+                                                          unsigned int nTkMatch,
+                                                       const std::vector<EmCaloObjEmu> &emcalo,
+                                                       const std::vector<TkObjEmu> &track,
+                                                       const PFTkEGAlgoEmuConfig::CompIDParameters &params) const {
+  // std::cout << "Endcap Piero Model" << std::endl;
+  // Get the cluster/track objects that form the composite candidate
+  const auto &calo = emcalo[cand.cluster_idx];
+  const auto &tk = track[cand.track_idx];
+  const l1t::PFCluster * pfcl = emcalo[cand.cluster_idx].src;
+  const l1t::PFTrack * pftk = tk.src;
+  const l1t::HGCalMulticluster * cl3d = 
+    dynamic_cast<const l1t::HGCalMulticluster *>(calo.src->constituentsAndFractions()[0].first.get());
+
+  // Prepare the input features
+  bdt_ee_feature_t cl_coreshowerlength = cl3d->coreShowerLength();
+  bdt_ee_feature_t cl_meanz = std::fabs(cl3d->zBarycenter());
+  bdt_ee_feature_t cl_spptot = cl3d->sigmaPhiPhiTot();
+  bdt_ee_feature_t cl_seetot = cl3d->sigmaEtaEtaTot();
+  bdt_ee_feature_t cl_szz = cl3d->sigmaZZ();
+
+  bdt_ee_feature_t cl_multiClassPionIdScore = pfcl->piIDScore();
+  bdt_ee_feature_t cl_multiClassEmIdScore = pfcl->emIDScore();
+  bdt_ee_feature_t tk_ptFrac = pftk->pt()/sumTkPt;
+  bdt_ee_feature_t cltk_ptRatio = pfcl->pt()/pftk->pt();
+  bdt_ee_feature_t cltk_absDeta = fabs(pfcl->eta() - pftk->eta());
+  bdt_ee_feature_t cltk_absDphi = fabs(pfcl->phi() - pftk->phi());
+
+// features=[
+//     "HGCalClu_coreshowerlength",
+//     "HGCalClu_meanz",
+//     "HGCalClu_spptot",
+//     "HGCalClu_seetot",
+//     "HGCalClu_szz",
+//     "HGCalClu_multiClassPionIdScore",
+//     "HGCalClu_multiClassEmIdScore",
+//     "Tk_PtFrac",
+//     "PtRatio",
+//     "abs_dEta",
+//     "abs_dPhi",
+// ]
+
+  // Run BDT inference
+  std::vector<bdt_ee_feature_t> inputs = {
+    cl_coreshowerlength,
+    cl_meanz,
+    cl_spptot,
+    cl_seetot,
+    cl_szz,
+    cl_multiClassPionIdScore,
+    cl_multiClassEmIdScore,
+    tk_ptFrac,
+    cltk_ptRatio,
+    cltk_absDeta,
+    cltk_absDphi};
+    
+  std::vector<bdt_ee_score_t> bdt_score = composite_bdt_ee_->decision_function(inputs);
+  // std::cout << "  out BDT score: " << bdt_score[0] << std::endl;
+  return bdt_score[0] / 4;
+}
 
 id_score_t PFTkEGAlgoEmulator::compute_composite_score(CompositeCandidate &cand,
                                                        const std::vector<EmCaloObjEmu> &emcalo,
@@ -502,9 +573,12 @@ void PFTkEGAlgoEmulator::run(const PFInputRegion &in, OutputRegion &out) const {
     link_emCalo2tk_elliptic(in.region, emcalo_sel, in.track, emCalo2tk);
   } else if(cfg.algorithm == 1) {
     link_emCalo2tk_composite(in.region, emcalo_sel, in.track, emCalo2tk, emCaloTkBdtScore);
-  } else if(cfg.algorithm == 2) {
-    link_emCalo2tk_composite_eb(in.region, emcalo_sel, in.track, emCalo2tk, emCaloTkBdtScore);
-  }
+  } else if(cfg.algorithm == 2 || cfg.algorithm == 3) {
+    link_emCalo2tk_composite_eb_ee(in.region, emcalo_sel, in.track, emCalo2tk, emCaloTkBdtScore);
+  } 
+  // else if(cfg.algorithm == 3) {
+  //   link_emCalo2tk_composite_ee(in.region, emcalo_sel, in.track, emCalo2tk, emCaloTkBdtScore);
+  // }
 
   out.egsta.clear();
   std::vector<EGIsoObjEmu> egobjs;
