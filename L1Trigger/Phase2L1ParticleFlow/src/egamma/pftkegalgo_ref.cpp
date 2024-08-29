@@ -328,8 +328,8 @@ void PFTkEGAlgoEmulator::link_emCalo2tk_composite_eb(const PFRegionEmu &r,
       float d_phi = deltaPhi(tk.floatPhi(), calo.floatPhi());
       float d_eta = tk.floatEta() - calo.floatEta();  // We only use it squared
       // float dR2 = (d_phi * d_phi) + (d_eta * d_eta);
-      const float dPhiMax = 0.03;
-      const float dEtaMax = 0.3;
+      const float dPhiMax = 0.3;
+      const float dEtaMax = 0.03;
       if ((((d_phi / dPhiMax) * (d_phi / dPhiMax)) + ((d_eta / dEtaMax) * (d_eta / dEtaMax))) < 1.) {
       // if (dR2 < 0.04) {
         // Only store indices, dR and dpT for now. The other quantities are computed only for the best nCandPerCluster.

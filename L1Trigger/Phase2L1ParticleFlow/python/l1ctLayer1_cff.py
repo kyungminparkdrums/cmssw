@@ -88,6 +88,7 @@ l1tLayer1Barrel = cms.EDProducer("L1TCorrelatorLayer1Producer",
         nEMCALO_EGIN = 10,
         nEM_EGOUT = 10,
         algorithm = 2,
+        trkQualityPtMin = 0.,
         compositeParametersTkEle = cms.PSet(
             model=cms.string("L1Trigger/Phase2L1ParticleFlow/data/my_prj.json"),
             loose_wp=cms.double(-9999),
