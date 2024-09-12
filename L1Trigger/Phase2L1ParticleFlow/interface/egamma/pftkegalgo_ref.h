@@ -164,8 +164,8 @@ namespace l1ct {
     typedef ap_fixed<21, 12, AP_RND_CONV, AP_SAT> bdt_feature_t;
     typedef ap_fixed<12, 3, AP_RND_CONV, AP_SAT> bdt_score_t;
 
-    typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_eb_feature_t;
-    typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_eb_score_t;
+    typedef ap_fixed<24, 9, AP_RND_CONV, AP_SAT> bdt_eb_feature_t;
+    typedef ap_fixed<12, 4, AP_RND_CONV, AP_SAT> bdt_eb_score_t;
 
     typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_ee_feature_t;
     typedef ap_fixed<30, 20, AP_RND_CONV, AP_SAT> bdt_ee_score_t;
@@ -207,7 +207,8 @@ namespace l1ct {
                                        const std::vector<TkObjEmu> &track,
                                        const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
 
-    id_score_t compute_composite_score_eb(CompositeCandidate &cand,
+    id_score_t compute_composite_score_eb(const PFRegionEmu &r,
+                                          CompositeCandidate &cand,
                                           float sumTkPt,
                                           unsigned int nTkMatch,
                                        const std::vector<EmCaloObjEmu> &emcalo,

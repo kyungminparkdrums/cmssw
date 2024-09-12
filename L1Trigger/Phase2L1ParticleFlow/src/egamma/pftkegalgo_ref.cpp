@@ -343,7 +343,7 @@ void PFTkEGAlgoEmulator::link_emCalo2tk_composite_eb_ee(const PFRegionEmu &r,
         cand.track_idx = itk;
         cand.dpt = std::abs(tk.floatPt() - calo.floatPt());
         candidates.push_back(cand);
-        sumTkPt += tk.src->pt();
+        sumTkPt += tk.floatPt();
         nTkMatch++;
       }
     }
@@ -362,7 +362,7 @@ void PFTkEGAlgoEmulator::link_emCalo2tk_composite_eb_ee(const PFRegionEmu &r,
       const std::vector<EmCaloObjEmu> &emcalo_sel = emcalo;
       id_score_t score = 0;
       if(cfg.algorithm == 2) {
-        score = compute_composite_score_eb(cand, sumTkPt, nTkMatch, emcalo_sel, track, cfg.compIDparams);
+        score = compute_composite_score_eb(r, cand, sumTkPt, nTkMatch, emcalo_sel, track, cfg.compIDparams);
       } else if(cfg.algorithm == 3) {
         score = compute_composite_score_ee(cand, sumTkPt, nTkMatch, emcalo_sel, track, cfg.compIDparams);
       }
@@ -378,7 +378,8 @@ void PFTkEGAlgoEmulator::link_emCalo2tk_composite_eb_ee(const PFRegionEmu &r,
   }
 }
 
-id_score_t PFTkEGAlgoEmulator::compute_composite_score_eb(CompositeCandidate &cand,
+id_score_t PFTkEGAlgoEmulator::compute_composite_score_eb(const PFRegionEmu &r,
+                                                          CompositeCandidate &cand,
                                                           float sumTkPt,
                                                           unsigned int nTkMatch,
                                                        const std::vector<EmCaloObjEmu> &emcalo,
@@ -389,36 +390,50 @@ id_score_t PFTkEGAlgoEmulator::compute_composite_score_eb(CompositeCandidate &ca
   const auto &tk = track[cand.track_idx];
   const l1t::PFCluster * pfcl = emcalo[cand.cluster_idx].src;
   const l1t::PFTrack * pftk = tk.src;
-  l1tp2::DigitizedClusterCorrelator digiCl(pfcl->digiWord());
+  l1tp2::DigitizedClusterCorrelator digiCl(ap_uint<64>(pfcl->digiWord()));
   const l1tp2::CaloCrystalCluster * crycl = 
     dynamic_cast<const l1tp2::CaloCrystalCluster *>(calo.src->constituentsAndFractions()[0].first.get());
 
   // Prepare the input features
-  bdt_eb_feature_t cl_pt = pfcl->pt();
+  bdt_eb_feature_t cl_pt = crycl->pt();
   bdt_eb_feature_t cl_ss = crycl->e2x5()/crycl->e5x5();
-  bdt_eb_feature_t cl_relIso = crycl->isolation()/pfcl->pt();
+  bdt_eb_feature_t cl_relIso = crycl->isolation()/crycl->pt();
   bdt_eb_feature_t cl_staWP = digiCl.passes_iso() && digiCl.passes_ss();
   bdt_eb_feature_t cl_looseTkWP = digiCl.passes_looseTkiso() && digiCl.passes_looseTkss();
   bdt_eb_feature_t tk_chi2RPhi = pftk->trackWord().getChi2RPhi();
-  bdt_eb_feature_t tk_ptFrac = pftk->pt()/sumTkPt;
-  bdt_eb_feature_t cltk_ptRatio = pfcl->pt()/pftk->pt();
+  bdt_eb_feature_t tk_ptFrac = tk.floatPt()/sumTkPt;
+  bdt_eb_feature_t cltk_ptRatio = crycl->pt()/tk.floatPt();
   bdt_eb_feature_t cltk_nTkMatch = nTkMatch;
-  bdt_eb_feature_t cltk_absDeta = fabs(pfcl->eta() - pftk->eta());
-  bdt_eb_feature_t cltk_absDphi = fabs(pfcl->phi() - pftk->phi());
+  // bdt_eb_feature_t cltk_absDeta = fabs(crycl->eta() - pftk->caloEta());
+  // bdt_eb_feature_t cltk_absDphi = fabs(crycl->phi() - pftk->caloPhi());
+  bdt_eb_feature_t cltk_absDeta = fabs(r.floatGlbEta(tk.hwEta) - crycl->eta());
+  bdt_eb_feature_t cltk_absDphi = fabs(r.floatGlbPhi(tk.hwPhi)- crycl->phi());
 
-  // std::cout << "features: "
-  //   << " cl_pt: " << cl_pt
-  //   << " cl_ss: " << cl_ss
-  //   << " cl_relIso: " << cl_relIso
-  //   << " cl_staWP: " << cl_staWP
-  //   << " cl_looseTkWP: " << cl_looseTkWP
-  //   << " tk_chi2RPhi: " << tk_chi2RPhi
-  //   << " tk_ptFrac: " << tk_ptFrac
-  //   << " cltk_ptRatio: " << cltk_ptRatio
-  //   << " cltk_nTkMatch: " << cltk_nTkMatch
-  //   << " cltk_absDeta: " << cltk_absDeta
-  //   << " cltk_absDphi: " << cltk_absDphi << std::endl;
+// if(crycl->pt() > 70) {
+//   std::cout << "--- New pair" << std::endl;
+//   std::cout << "   Cluster: pt: " <<  crycl->pt() << " eta: " << crycl->eta() << " phi: " << crycl->phi() << " isolation: " << crycl->isolation() 
+//   << " digi: " << std::hex << uint64_t(pfcl->digiWord()) << std::dec << std:: endl;
+//   std::cout << "   Track: pt: " <<  pftk->pt() << " eta: " << pftk->caloEta() << " phi: " << pftk->caloPhi() << std:: endl;
+// std::cout << " dec pt: " << tk.floatPt() << "    eta: " << r.floatGlbEta(tk.hwEta) << " deta: " << fabs(r.floatGlbEta(tk.hwEta) - crycl->eta()) << " dec phi: " << r.floatGlbPhi(tk.hwPhi) << 
+// " dphi: " << fabs(crycl->phi() - r.floatGlbPhi(tk.hwPhi)) << std::endl;
 
+//   std::cout << " .  features: "
+//     << " cl_pt: " << cl_pt
+//     << " cl_ss: " << cl_ss
+//     << " cl_relIso: " << cl_relIso
+//     << " (float): " << crycl->isolation()/crycl->pt()
+//     << " cl_staWP: " << cl_staWP
+//     << " cl_looseTkWP: " << cl_looseTkWP
+//     << " tk_chi2RPhi: " << tk_chi2RPhi
+//     << " tk_ptFrac: " << tk_ptFrac
+//     << " cltk_ptRatio: " << cltk_ptRatio
+//     << " cltk_nTkMatch: " << cltk_nTkMatch
+//     << " cltk_absDeta: " << cltk_absDeta
+//     << " (float): " << fabs(r.floatGlbEta(tk.hwEta) - crycl->eta())
+//     << " cltk_absDphi: " << cltk_absDphi 
+//     << " float: " << fabs(r.floatGlbPhi(tk.hwPhi)- crycl->phi())
+//     << std::endl;
+// }
 // 400fb-1 7.5*10^34 -> 60gg
     // "CryClu_pt",
     // "CryClu_ss",
@@ -466,8 +481,8 @@ id_score_t PFTkEGAlgoEmulator::compute_composite_score_ee(CompositeCandidate &ca
   bdt_ee_feature_t cl_multiClassEmIdScore = pfcl->emIDScore();
   bdt_ee_feature_t tk_ptFrac = pftk->pt()/sumTkPt;
   bdt_ee_feature_t cltk_ptRatio = pfcl->pt()/pftk->pt();
-  bdt_ee_feature_t cltk_absDeta = fabs(pfcl->eta() - pftk->eta());
-  bdt_ee_feature_t cltk_absDphi = fabs(pfcl->phi() - pftk->phi());
+  bdt_ee_feature_t cltk_absDeta = fabs(pfcl->eta() - pftk->caloEta());
+  bdt_ee_feature_t cltk_absDphi = fabs(pfcl->phi() - pftk->caloPhi());
 
 // features=[
 //     "HGCalClu_coreshowerlength",
@@ -717,6 +732,29 @@ EGIsoEleObjEmu &PFTkEGAlgoEmulator::addEGIsoEleToPF(std::vector<EGIsoEleObjEmu> 
     // tight ele WP is set for tight BDT score
     egHwQual = (hwQual & 0x9) | ((bdtScore >= cfg.compIDparams.bdtScore_tight_wp) << 1);
   } else if(cfg.algorithm == 2) {
+    // std::cout << "alog 2 WPs" << std::endl;
+    vector<float> pt_bins = {0,5,10,20,30,50};
+    vector<float> tight_wps = {
+          0.18,
+          0.05,
+          -0.35,
+          -0.5,
+          -0.6,
+          -0.4};
+
+    bool isTight = false;
+
+    // std::upper_bound returns an iterator to the first element in pt_bins that is greater than pt_value
+    float pt_value = egiso.floatPt();
+    auto it = std::upper_bound(pt_bins.begin(), pt_bins.end(), pt_value);
+    unsigned int bin_index = it - pt_bins.begin() - 1;
+    
+    isTight = (bdtScore > id_score_t(tight_wps[bin_index]));
+
+    // tight ele WP is set for tight BDT score
+    egHwQual = (hwQual & 0x9) | (isTight << 1);    
+  } else if(cfg.algorithm == 3) {
+    // std::cout << "alog 3 WPs" << std::endl;
     vector<float> pt_bins = {0,5,10,20,30,50};
     vector<float> tight_wps = {
           1.2367626271489272,
