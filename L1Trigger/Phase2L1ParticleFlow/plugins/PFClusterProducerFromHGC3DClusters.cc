@@ -149,15 +149,15 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
       //        3, pt, it->eta(), em_old, em_new, hoe, cluster.pt(), cluster.emEt(), cluster.hOverE());
     }
 
-    float maxScore = multiClassPID_.evaluate(*it, cluster);
-    if (multiClassPID_.passPuID(cluster, maxScore)) {
+    multiClassPID_.evaluate(*it, cluster);
+    if (multiClassPID_.passPuID(cluster)) {
       continue;
     }
 
     if (!emOnly_) {
-      isEM = multiClassPID_.passPFEmID(cluster, maxScore);
+      isEM = multiClassPID_.passPFEmID(cluster);
     }
-    cluster.setHwQual((isEM ? 1 : 0) + (multiClassPID_.passEgEmID(cluster, maxScore) << 1));
+    cluster.setHwQual((isEM ? 1 : 0) & (multiClassPID_.passEgEmIDLoose(cluster) << 2) & (multiClassPID_.passEgEmIDTight(cluster) << 1) );
 
     if (corrector_.valid())
       corrector_.correctPt(cluster);

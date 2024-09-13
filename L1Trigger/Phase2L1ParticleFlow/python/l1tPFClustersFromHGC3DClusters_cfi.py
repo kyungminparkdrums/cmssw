@@ -38,7 +38,12 @@ l1tPFClustersFromHGC3DClusters = cms.EDProducer("PFClusterProducerFromHGC3DClust
         isPUFilter = cms.bool(False),
         preselection = cms.string(""),
         #model = cms.string("L1Trigger/Phase2L1ParticleFlow/data/multiclassID/model_classSF_maxdepth6_18p8quant.json"),
-        model = cms.string("L1Trigger/Phase2L1ParticleFlow/data/multiclassID/model_classSF_maxdepth6_20p10quant_meanzoffset.json"),
+        #model = cms.string("L1Trigger/Phase2L1ParticleFlow/data/multiclassID/model_classSF_maxdepth6_20p10quant_meanzoffset.json"),
+        model = cms.string("L1Trigger/Phase2L1ParticleFlow/data/multiclassID/model_maxdepth5_20p10quant_meanzoffset.json"),
+        wp_pu = cms.double(0.4120726), # 90% PU rejection
+        wp_pion = cms.double(0.55614126), # 90% pion efficiency after PU veto
+        wp_eg_loose = cms.double(0.16114202), # 99% eg efficiency after PU veto 
+        wp_eg_tight = cms.double(0.449586), # 97% eg efficiency after PU veto 
         variables = cms.VPSet(
             cms.PSet(name = cms.string("showerlength"), value = cms.string("showerLength()")),
             cms.PSet(name = cms.string("coreshowerlength"), value = cms.string("coreShowerLength()")),
