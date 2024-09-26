@@ -3,6 +3,19 @@
 l1tpf::HGC3DClusterID::HGC3DClusterID(const edm::ParameterSet &pset) {
   // Inference of the conifer BDT model
   multiclass_bdt_ = new conifer::BDT<bdt_feature_t, bdt_score_t, false>(edm::FileInPath(pset.getParameter<std::string>("model")).fullPath());
+
+  /*
+  wp_PU_lowPt = 0.13562682; // 97% [5,10] GeV
+  wp_PU_highPt = 0.36245897; // 90% [10, -] GeV
+  wp_Pi_lowPt = 0.07440273; // 95%
+  wp_Pi_highPt = 0.15240844; // 90%
+  wp_Eg_lowPt = 0.24925998; // 96%
+  wp_Eg_highPt = 0.3052651; // 99.3%
+  */
+
+  wp_PU = 0.37893048; // 91.3%
+  wp_Pi = 0.13260031; // 98%
+  wp_eg = 0.18857427; // 99%
 }
 
 float l1tpf::HGC3DClusterID::evaluate(const l1t::HGCalMulticluster &cl, l1t::PFCluster &cpf) {
@@ -15,6 +28,10 @@ float l1tpf::HGC3DClusterID::evaluate(const l1t::HGCalMulticluster &cl, l1t::PFC
   bdt_feature_t seetot = cl.sigmaEtaEtaTot();
   bdt_feature_t spptot = cl.sigmaPhiPhiTot();
   bdt_feature_t szz = cl.sigmaZZ();
+
+  //bdt_feature_t srrtot = cl.sigmaRRTot();
+  //bdt_feature_t emaxe = cl.eMax() / cl.energy();
+  //bdt_feature_t emax3layers = cl.emax3layers(); 
 
   // Run BDT inference
   inputs = {showerlength, coreshowerlength, eot, eta, meanz, seetot, spptot, szz};
@@ -43,49 +60,37 @@ float l1tpf::HGC3DClusterID::evaluate(const l1t::HGCalMulticluster &cl, l1t::PFC
   cpf.setPuIDScore(puScore);
   cpf.setEmIDScore(emScore);
   cpf.setPiIDScore(piScore);
+  
+  cpf.setRho(cl.pt());
 
   return maxScore;
 }
 
 
 bool l1tpf::HGC3DClusterID::passPuID(l1t::PFCluster &cpf, float maxScore) {
-  // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
-  bool isMax = cpf.puIDScore() == maxScore;
-  float puWP = 0.4878136; // softmax WP for PU rejection rate at 86%
-  //return isMax & (cpf.puIDScore() > puWP);
-  return (cpf.puIDScore() > puWP);
+
+  return (cpf.puIDScore() > wp_PU);
+  
+  //return (cpf.getRho() < 10 ? (cpf.puIDScore() > wp_PU_lowPt) : (cpf.puIDScore() > wp_PU_highPt));
 }
 
 bool l1tpf::HGC3DClusterID::passPFEmID(l1t::PFCluster &cpf, float maxScore) {
-  // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
-  bool isMax = cpf.emIDScore() == maxScore;
 
-  float puWP = 0.4878136; // softmax WP for PU rejection rate at 86%
-  float egWP = 0.115991354; // softmax WP for eg ID rate at 99% tagging after PU rejection
+  return ((cpf.puIDScore() <= wp_PU) && (cpf.emIDScore() > wp_eg));
 
-  //return isMax & (cpf.emIDScore() > egWP);
-  return ((cpf.puIDScore() <= puWP) && (cpf.emIDScore() > egWP));
+  //return (cpf.getRho() < 10 ? ((cpf.puIDScore() <= wp_PU_lowPt) && (cpf.emIDScore() > wp_Eg_lowPt)) : ((cpf.puIDScore() <= wp_PU_highPt) && (cpf.emIDScore() > wp_Eg_highPt)));
 }
 
 bool l1tpf::HGC3DClusterID::passEgEmID(l1t::PFCluster &cpf, float maxScore) {
-  // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
-  bool isMax = cpf.emIDScore() == maxScore;
   
-  float puWP = 0.4878136; // softmax WP for PU rejection rate at 86%
-  float egWP = 0.115991354; // softmax WP for eg ID rate at 99% tagging after PU rejection
+  return ((cpf.puIDScore() <= wp_PU) && (cpf.emIDScore() > wp_eg));
 
-  //return isMax & (cpf.emIDScore() > egWP);
-  return ((cpf.puIDScore() <= puWP) && (cpf.emIDScore() > egWP));
+  //return (cpf.getRho() < 10 ? ((cpf.puIDScore() <= wp_PU_lowPt) && (cpf.emIDScore() > wp_Eg_lowPt)) : ((cpf.puIDScore() <= wp_PU_highPt) && (cpf.emIDScore() > wp_Eg_highPt)));
 }
 
 
 bool l1tpf::HGC3DClusterID::passPiID(l1t::PFCluster &cpf, float maxScore) {
-  // Using argmax 'WP' + and pass some 'minimal' WP on the max probability
-  bool isMax = cpf.piIDScore() == maxScore;
-
-  float puWP = 0.4878136; // softmax WP for PU rejection rate at 86%
-  float piWP = 0.5363581; // softmax WP for pi ID rate at 90% tagging after PU rejection
   
-  //return isMax & (cpf.piIDScore() > piWP);
-  return ((cpf.puIDScore() <= puWP) && (cpf.piIDScore() > piWP));
+  return ((cpf.puIDScore() <= wp_PU) && (cpf.piIDScore() > wp_Pi));
+  //return (cpf.getRho() < 10 ? ((cpf.puIDScore() <= wp_PU_lowPt) && (cpf.piIDScore() > wp_Pi_lowPt)) : ((cpf.puIDScore() <= wp_PU_highPt) && (cpf.piIDScore() > wp_Pi_highPt)));
 }
