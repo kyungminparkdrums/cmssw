@@ -735,12 +735,12 @@ EGIsoEleObjEmu &PFTkEGAlgoEmulator::addEGIsoEleToPF(std::vector<EGIsoEleObjEmu> 
     // std::cout << "alog 2 WPs" << std::endl;
     vector<float> pt_bins = {0,5,10,20,30,50};
     vector<float> tight_wps = {
-          0.18,
+          0.19,
           0.05,
           -0.35,
+          -0.45,
           -0.5,
-          -0.6,
-          -0.4};
+          -0.38};
 
     bool isTight = false;
 
