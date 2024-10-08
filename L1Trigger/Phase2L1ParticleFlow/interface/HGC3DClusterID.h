@@ -20,24 +20,11 @@
 typedef ap_fixed<20, 10> bdt_feature_t;
 typedef ap_fixed<20, 6> bdt_score_t;
 
-//typedef ap_fixed<18, 8, AP_RND_CONV, AP_SAT> bdt_feature_t;
-//typedef ap_fixed<18, 8, AP_RND_CONV, AP_SAT> bdt_score_t;
-//conifer::BDT<bdt_feature_t, ap_fixed<18, 8, AP_RND_CONV, AP_SAT>, false> *multiclass_bdt_;
-
 conifer::BDT<bdt_feature_t, bdt_score_t, false> *multiclass_bdt_;
 
-/*
-float wp_PU_lowPt;
-float wp_PU_highPt;
-float wp_Pi_lowPt;
-float wp_Pi_highPt;
-float wp_Eg_lowPt;
-float wp_Eg_highPt;
-*/
-
-float wp_PU;
-float wp_Pi;
-float wp_eg;
+std::vector<float> wp_PU;
+std::vector<float> wp_Pi;
+std::vector<float> wp_Eg;
 
 std::vector<bdt_feature_t> inputs;
 std::vector<bdt_score_t> bdt_score;
