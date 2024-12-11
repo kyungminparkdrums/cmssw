@@ -6,6 +6,7 @@
 #include "DataFormats/L1TParticleFlow/interface/pf.h"
 #include "L1Trigger/Phase2L1ParticleFlow/interface/common/inversion.h"
 
+// FIXME: back to the old way of including conifer.h
 #include "L1Trigger/Phase2L1ParticleFlow/interface/conifer.h"
 // #include "conifer.h"
 
@@ -35,7 +36,10 @@ namespace l1ct {
     std::vector<double> dEtaValues;
     std::vector<double> dPhiValues;
     float trkQualityPtMin;  // GeV
-    unsigned int algorithm;
+
+    enum Algo { undefined = -1, elliptic = 0, compositeEE_v0 = 1, compositeEB_v0 = 2, compositeEE_v1 = 3 };
+
+    Algo algorithm;
     unsigned int nCompCandPerCluster;
     bool writeEgSta;
 
@@ -123,7 +127,7 @@ namespace l1ct {
           dEtaValues(dEtaValues),
           dPhiValues(dPhiValues),
           trkQualityPtMin(trkQualityPtMin),
-          algorithm(algo),
+          algorithm(Algo::undefined),
           nCompCandPerCluster(nCompCandPerCluster),
           writeEgSta(writeEgSta),
           tkIsoParams_tkEle(tkIsoParams_tkEle),
@@ -135,7 +139,18 @@ namespace l1ct {
           hwIsoTypeTkEle(hwIsoTypeTkEle),
           hwIsoTypeTkEm(hwIsoTypeTkEm),
           compIDparams(compIDparams),
-          debug(debug) {}
+          debug(debug) {
+      if (algo == 0)
+        algorithm = Algo::elliptic;
+      else if (algo == 1)
+        algorithm = Algo::compositeEE_v0;
+      else if (algo == 2)
+        algorithm = Algo::compositeEB_v0;
+      else if (algo == 3)
+        algorithm = Algo::compositeEE_v1;
+      else
+        throw std::invalid_argument("[PFTkEGAlgoEmuConfig]: Unknown algorithm type: " + std::to_string(algo));
+    }
 
     static edm::ParameterSetDescription getParameterSetDescription();
   };
@@ -178,23 +193,11 @@ namespace l1ct {
                                  const std::vector<TkObjEmu> &track,
                                  std::vector<int> &emCalo2tk) const;
 
-    void link_emCalo2tk_composite(const PFRegionEmu &r,
-                                  const std::vector<EmCaloObjEmu> &emcalo,
-                                  const std::vector<TkObjEmu> &track,
-                                  std::vector<int> &emCalo2tk,
-                                  std::vector<id_score_t> &emCaloTkBdtScore) const;
-
     void link_emCalo2tk_composite_eb_ee(const PFRegionEmu &r,
-                                    const std::vector<EmCaloObjEmu> &emcalo,
-                                    const std::vector<TkObjEmu> &track,
-                                    std::vector<int> &emCalo2tk,
-                                    std::vector<id_score_t> &emCaloTkBdtScore) const;
-
-    // void link_emCalo2tk_composite_ee(const PFRegionEmu &r,
-    //                                 const std::vector<EmCaloObjEmu> &emcalo,
-    //                                 const std::vector<TkObjEmu> &track,
-    //                                 std::vector<int> &emCalo2tk,
-    //                                 std::vector<id_score_t> &emCaloTkBdtScore) const;
+                                        const std::vector<EmCaloObjEmu> &emcalo,
+                                        const std::vector<TkObjEmu> &track,
+                                        std::vector<int> &emCalo2tk,
+                                        std::vector<id_score_t> &emCaloTkBdtScore) const;
 
     struct CompositeCandidate {
       unsigned int cluster_idx;
@@ -211,19 +214,17 @@ namespace l1ct {
                                           CompositeCandidate &cand,
                                           float sumTkPt,
                                           unsigned int nTkMatch,
-                                       const std::vector<EmCaloObjEmu> &emcalo,
-                                       const std::vector<TkObjEmu> &track,
-                                       const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
+                                          const std::vector<EmCaloObjEmu> &emcalo,
+                                          const std::vector<TkObjEmu> &track,
+                                          const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
 
     id_score_t compute_composite_score_ee(CompositeCandidate &cand,
                                           float sumTkPt,
                                           unsigned int nTkMatch,
-                                       const std::vector<EmCaloObjEmu> &emcalo,
-                                       const std::vector<TkObjEmu> &track,
-                                       const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
+                                          const std::vector<EmCaloObjEmu> &emcalo,
+                                          const std::vector<TkObjEmu> &track,
+                                          const PFTkEGAlgoEmuConfig::CompIDParameters &params) const;
 
-
-    //FIXME: still needed
     float deltaPhi(float phi1, float phi2) const;
 
     void sel_emCalo(unsigned int nmax_sel,
@@ -395,9 +396,8 @@ namespace l1ct {
                            z0_t z0) const;
 
     PFTkEGAlgoEmuConfig cfg;
-    conifer::BDT<bdt_feature_t, bdt_score_t> *composite_bdt_;
-    conifer::BDT<bdt_eb_feature_t, bdt_eb_score_t> *composite_bdt_eb_;
-    conifer::BDT<bdt_ee_feature_t, bdt_ee_score_t> *composite_bdt_ee_;
+    // Could use a std::variant
+    void *model_;
 
     int debug_;
   };
