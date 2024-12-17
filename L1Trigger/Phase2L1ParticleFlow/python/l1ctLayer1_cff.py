@@ -191,6 +191,7 @@ l1tLayer1HGCal = cms.EDProducer("L1TCorrelatorLayer1Producer",
         ),
         corrector = cms.string("L1Trigger/Phase2L1ParticleFlow/data/hadcorr_HGCal3D_TC.root"),
         correctorEmfMax = cms.double(1.125),
+        emInterpScenario = cms.string("allKeepHad"), # for all clusters, use EM intepretation to redefine the EM part of the energy
     ),
     regionizerAlgo = cms.string("Multififo"),
     regionizerAlgoParameters = cms.PSet(
@@ -334,7 +335,7 @@ l1tLayer1HGCalNoTK = cms.EDProducer("L1TCorrelatorLayer1Producer",
         ),
         corrector = cms.string("L1Trigger/Phase2L1ParticleFlow/data/hadcorr_HGCal3D_TC.root"),
         correctorEmfMax = cms.double(1.125),
-
+        emInterpScenario = cms.string("allKeepHad"), # for all clusters, use EM intepretation to redefine the EM part of the energy
     ),
     regionizerAlgo = cms.string("Multififo"),
     regionizerAlgoParameters = cms.PSet(
