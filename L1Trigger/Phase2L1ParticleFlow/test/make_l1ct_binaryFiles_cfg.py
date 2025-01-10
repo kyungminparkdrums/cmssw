@@ -43,14 +43,14 @@ process.source = cms.Source("PoolSource",
     skipEvents = cms.untracked.uint32(0),
 )
 
-process.load('Configuration.Geometry.GeometryExtended2026D95Reco_cff')
-process.load('Configuration.Geometry.GeometryExtended2026D95_cff')
+process.load('Configuration.Geometry.GeometryExtended2026D110Reco_cff')
+process.load('Configuration.Geometry.GeometryExtended2026D110_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('SimCalorimetry.HcalTrigPrimProducers.hcaltpdigi_cff') # needed to read HCal TPs
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '125X_mcRun4_realistic_v2', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '141X_mcRun4_realistic_v3', '')
 
 process.load('L1Trigger.Phase2L1ParticleFlow.l1ctLayer1_cff')
 process.load('L1Trigger.Phase2L1ParticleFlow.l1ctLayer2EG_cff')
@@ -135,6 +135,7 @@ process.runPF = cms.Path(
         # process.l1tSAMuonsGmt + 
         # process.l1tPhase2L1CaloEGammaEmulator + 
         # process.l1tPhase2CaloPFClusterEmulator +
+        # process.l1tPFClustersFromHGC3DClusters +
         process.l1tGTTInputProducer +
         process.l1tTrackSelectionProducer +
         process.l1tVertexFinderEmulator +
@@ -235,4 +236,4 @@ if args.tm18:
                 barrelSerenityVU13PTM18WriterConfig.clone(inputFileName = f"l1BarrelSerenityTM18-inputs-vu13p-ts{tmSlice}")
             )        
 
-process.source.fileNames  = [ '/store/cmst3/group/l1tr/cerminar/14_0_X/fpinputs_131X/v3/TTbar_PU200/inputs131X_1.root' ]
+process.source.fileNames  = [ '/store/cmst3/group/l1tr/FastPUPPI/14_2_X/fpinputs_140X/v0/TT_PU200/inputs140X_1.root' ]
