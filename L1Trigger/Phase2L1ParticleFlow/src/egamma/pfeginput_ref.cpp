@@ -44,6 +44,8 @@ void EGInputSelectorEmulator::select_eginput(const l1ct::HadCaloObjEmu &in,
   out.hwSrrTot = in.hwSrrTot;
   out.hwMeanZ = in.hwMeanZ;
   out.hwHoe = in.hwHoe;
+  out.hwPiProb = in.hwPiProb;
+  out.hwEmProb = in.hwEmProb;
   valid_out = (in.hwEmID & cfg.idMask) != 0;
 }
 
