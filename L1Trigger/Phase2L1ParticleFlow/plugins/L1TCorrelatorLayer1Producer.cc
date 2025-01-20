@@ -1006,12 +1006,16 @@ void L1TCorrelatorLayer1Producer::addDecodedMuon(l1ct::DetectorSector<l1ct::MuOb
 void L1TCorrelatorLayer1Producer::getDecodedGctEmCluster(l1ct::EmCaloObjEmu &calo,
                                                          l1ct::DetectorSector<l1ct::EmCaloObjEmu> &sec,
                                                          const l1tp2::DigitizedClusterCorrelator &digi) const {
+  constexpr float ETA_RANGE_ONE_SIDE = 1.4841;  // barrel goes from (-1.4841, +1.4841)
+  constexpr float ETA_LSB = 2 * ETA_RANGE_ONE_SIDE / 170.;
+  constexpr float PHI_LSB = 2 * M_PI / 360.;
+
   calo.clear();
   calo.hwPt = l1ct::Scales::makePtFromFloat(digi.pt() * digi.ptLSB());
-  calo.hwEta = l1ct::Scales::makeGlbEta(digi.realEta()) -
-               sec.region.hwEtaCenter;  // important to enforce that the region boundary is on a discrete value
-  calo.hwPhi = l1ct::Scales::makePhi(sec.region.localPhi(digi.realPhi()));
-
+  calo.hwEta = l1ct::Scales::makeGlbEta(digi.realEta() + ETA_LSB / 2.) -
+               sec.region.hwEtaCenter;  // FIXME: correct here a 1/2 a crystal bias
+  calo.hwPhi = l1ct::Scales::makePhi(
+      sec.region.localPhi(digi.realPhi() + PHI_LSB / 2.));  // FIXME: correct here a 1/2 a crystal bias
   if (corrector_.valid()) {
     float newpt = corrector_.correctedPt(calo.floatPt(), calo.floatPt(), sec.region.floatGlbEta(calo.hwEta));
     calo.hwPt = l1ct::Scales::makePtFromFloat(newpt);
