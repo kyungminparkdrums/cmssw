@@ -38,7 +38,6 @@ namespace l1t {
 
     const L1CandPtr& caloPtr() const { return caloPtr_; }
     void setCaloPtr(const L1CandPtr& ptr) { caloPtr_ = ptr; }
-    // FIXME: need to provide backward compatibility to get Ptr out of the PFCluster ref
 
     const MuonRef& muon() const { return muonRef_; }
     void setMuon(const MuonRef& ref) { muonRef_ = ref; }
@@ -71,7 +70,6 @@ namespace l1t {
     void setEncodedPuppi64(uint64_t encodedPuppi64) { encodedPuppi64_ = encodedPuppi64; }
 
   private:
-  
     L1CandPtr caloPtr_;
     PFTrackRef trackRef_;
     MuonRef muonRef_;
