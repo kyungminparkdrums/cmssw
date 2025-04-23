@@ -132,15 +132,15 @@ l1ct::HadCaloObjEmu l1ct::HgcalClusterDecoderEmulator::decode(const l1ct::PFRegi
   // FIXME: use hardware values everywhere
   std::vector<MultiClassID::bdt_feature_t> inputs = {w_showerlenght,
                                                      w_coreshowerlenght,
-                                                     w_emf / 256.,
-                                                     w_abseta * ETAPHI_LSB,
-                                                     w_meanz * 0.5,  // We use the full resolution here
-                                                     w_sigmaetaeta * SIGMAETAETA_LSB,
-                                                     w_sigmaphiphi * SIGMAPHIPHI_LSB,
-                                                     w_sigmazz * SIGMAZZ_LSB};
+                                                     w_emf,
+                                                     w_abseta,
+                                                     w_meanz,  // hwFPMeanz * 2 = w_meanz
+                                                     w_sigmaetaeta,
+                                                     w_sigmaphiphi,
+                                                     w_sigmazz};
 
   // evaluate multiclass model
-  valid = multiclass_id_.evaluate(out, inputs);
+  //valid = multiclass_id_.evaluate(out, inputs);
 
   // Apply EM interpretation scenario
   if (emInterpScenario_ == UseEmInterp::No) {  // we do not use EM interpretation
@@ -168,6 +168,8 @@ l1ct::HadCaloObjEmu l1ct::HgcalClusterDecoderEmulator::decode(const l1ct::PFRegi
     // NOTE: hoe/emfrac are not updated
   }
 
+  valid = multiclass_id_.evaluate(out, inputs);
+  
   return out;
 }
 
@@ -194,6 +196,8 @@ bool l1ct::HgcalClusterDecoderEmulator::MultiClassID::evaluate(l1ct::HadCaloObjE
   softmax(raw_scores, sm_scores);
 
   unsigned int pt_bin = 0;
+  
+  /*
   for (size_t i = wp_pt_.size() - 1; i > 0; --i) {
     if (cl.hwPt >=
         wp_pt_[i]) {  // FIXME: we use the cluster pt to determine the bin before changes due to EM interpretation?
@@ -201,6 +205,12 @@ bool l1ct::HgcalClusterDecoderEmulator::MultiClassID::evaluate(l1ct::HadCaloObjE
       break;
     }
   }
+  */
+
+  if (cl.hwPt >= wp_pt_[0]) {  // FIXME: we use the cluster pt to determine the bin before changes due to EM interpretation?
+    pt_bin = 1;
+  }
+
   bool passPu = (sm_scores[0] >= wp_PU_[pt_bin]);
   // bool passPi = (sm_scores[1] >= wp_Pi_[pt_bin]);  // FIXME: where do we store this?
   bool passEgEm = (sm_scores[2] >= wp_EgEm_[pt_bin]);
@@ -210,6 +220,7 @@ bool l1ct::HgcalClusterDecoderEmulator::MultiClassID::evaluate(l1ct::HadCaloObjE
   // bit 1: EG EM ID
   // bit 2: EG Loose ID
   cl.hwEmID = passPFEm | (passEgEm << 1) | (passEgEm << 2);  // FIXME: for now loose eg WP == tight WP?
+  //cl.hwEmID = passPFEm | (passEgEm << 1);
 
   cl.hwPiProb = sm_scores[1];
   cl.hwEmProb = sm_scores[2];
