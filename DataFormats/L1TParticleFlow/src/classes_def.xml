@@ -39,6 +39,14 @@
   <class name="l1t::RegionalOutput<l1t::PFCandidateCollection>" />
   <class name="edm::Wrapper<l1t::RegionalOutput<l1t::PFCandidateCollection>>" />
 
+  <ioread sourceClass="l1t::PFCandidate" targetClass="l1t::PFCandidate" version="[-7]" target="" source="edm::Ref<l1t::PFClusterCollection> clusterRef_" include="DataFormats/Common/interface/RefToPtr.h,DataFormats/L1TParticleFlow/interface/PFCluster.h">
+  <![CDATA[
+   newObj->setCaloPtr(edm::refToPtr(onfile.clusterRef_));
+  ]]>
+  </ioread>
+
+
+
   <class name="l1t::PFJet"  ClassVersion="6">
         <version ClassVersion="6" checksum="2599349078"/>
         <version ClassVersion="5" checksum="2270932343"/>
