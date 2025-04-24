@@ -133,7 +133,7 @@ l1ct::HadCaloObjEmu l1ct::HgcalClusterDecoderEmulator::decode(const l1ct::PFRegi
   std::vector<MultiClassID::bdt_feature_t> inputs = {w_showerlenght,
                                                      w_coreshowerlenght,
                                                      w_emf,
-                                                     w_abseta,
+                                                     w_abseta - 256,
                                                      w_meanz,  // hwFPMeanz * 2 = w_meanz
                                                      w_sigmaetaeta,
                                                      w_sigmaphiphi,
