@@ -173,10 +173,6 @@ if not args.patternFilesOFF:
     process.l1tLayer1HF.patternWriters = cms.untracked.VPSet(*hfWriterConfigs)
 
 process.runPF = cms.Path(
-        # process.l1tSAMuonsGmt +
-        # process.l1tPhase2L1CaloEGammaEmulator +
-        # process.l1tPhase2CaloPFClusterEmulator +
-        # process.l1tPFClustersFromHGC3DClusters +
         process.l1tGTTInputProducer +
         process.l1tTrackSelectionProducer +
         process.l1tVertexFinderEmulator +
