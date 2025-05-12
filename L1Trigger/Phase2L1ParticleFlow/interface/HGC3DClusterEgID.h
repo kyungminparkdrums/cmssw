@@ -16,6 +16,7 @@
 
 #include <vector>
 #include <cmath>
+#include <conifer>
 
 namespace l1tpf {
   class HGC3DClusterEgID {
