@@ -41,7 +41,7 @@ private:
   edm::EDGetTokenT<OrbitCollection<l1Scouting::TkEle>> structTkEmToken_;
 
   struct Cuts {
-    float minpt = 5;
+    float minpt = 1;
     float maxeta = 1.479;
     float maxdz = 1;
   } cuts;

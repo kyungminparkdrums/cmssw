@@ -6,7 +6,6 @@ from L1TriggerScouting.Phase2.options_cff import options
 options.parseArguments()
 if options.buNumStreams == []:
     options.buNumStreams.append(2)
-#analyses = options.analyses if options.analyses else ["w3pi", "wdsg", "wpig", "hrhog", "hphig", "hjpsig", "hphijpsi", "h2rho", "h2phi"]
 analyses = options.analyses if options.analyses else ["w3pi", "wdsg", "wpig", "hrhog", "hphig", "hjpsig", "hphijpsi", "h2rho", "h2phi", "zdee"]
 print(f"Analyses set to {analyses}")
 
