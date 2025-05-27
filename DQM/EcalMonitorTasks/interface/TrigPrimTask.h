@@ -16,6 +16,9 @@
 #include "CondFormats/DataRecord/interface/EcalTPGTowerStatusRcd.h"
 #include "CondFormats/DataRecord/interface/EcalTPGStripStatusRcd.h"
 
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgoRcd.h"
+
 namespace ecaldqm {
 
   class TrigPrimTask : public DQWorkerTask {
@@ -34,7 +37,8 @@ namespace ecaldqm {
     void runOnEmulTPs(EcalTrigPrimDigiCollection const&);
     template <typename DigiCollection>
     void runOnDigis(DigiCollection const&);
-
+    void runOnRecHits(EcalRecHitCollection const&, Collections); 
+    
     void setTokens(edm::ConsumesCollector&) override;
 
     enum Constants { nBXBins = 15 };
@@ -65,6 +69,11 @@ namespace ecaldqm {
 
     edm::InputTag lhcStatusInfoCollectionTag_;
     edm::EDGetTokenT<TCDSRecord> lhcStatusInfoRecordToken_;
+  
+    std::map<EcalTrigTowerDetId, float> mapTowerMaxRecHitEnergy;
+    std::map<EcalTrigTowerDetId, int> mapTowerOfflineSpikes;
+    edm::ESGetToken<EcalSeverityLevelAlgo, EcalSeverityLevelAlgoRcd> severityToken_;
+    const EcalSeverityLevelAlgo* sevLevel;
   };
 
   inline bool TrigPrimTask::analyze(void const* _p, Collections _collection) {
@@ -87,6 +96,12 @@ namespace ecaldqm {
       case kEEDigi:
         if (_p)
           runOnDigis(*static_cast<EEDigiCollection const*>(_p));
+        return true;
+        break;
+      case kEBRecHit:
+      case kEERecHit:
+        if (_p)
+          runOnRecHits(*static_cast<EcalRecHitCollection const*>(_p), _collection);
         return true;
         break;
       default:

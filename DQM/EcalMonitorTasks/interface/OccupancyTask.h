@@ -13,9 +13,6 @@
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "DataFormats/OnlineMetaData/interface/OnlineLuminosityRecord.h"
 
-#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
-#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgoRcd.h"
-
 namespace ecaldqm {
   class OccupancyTask : public DQWorkerTask {
   public:
@@ -35,13 +32,9 @@ namespace ecaldqm {
     void runOnRecHits(EcalRecHitCollection const&, Collections);
     void setTokens(edm::ConsumesCollector&) override;
     void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
-   
-    std::map<EcalTrigTowerDetId, float> mapTowerMaxRecHitEnergy;
-    std::map<EcalTrigTowerDetId, int> mapTowerOfflineSpikes;
-  private:
+ private:
     void setParams(edm::ParameterSet const&) override;
     edm::ESGetToken<EcalLaserDbService, EcalLaserDbRecord> lasertoken_;
-    edm::ESGetToken<EcalSeverityLevelAlgo, EcalSeverityLevelAlgoRcd> severityToken_;
     bool FillLaser = false;
     float recHitThreshold_;
     float tpThreshold_;
@@ -52,8 +45,6 @@ namespace ecaldqm {
     bool FindPUinLS = false;
     int nEv;
     bool lumiCheck_;
-
-    const EcalSeverityLevelAlgo* sevLevel;
   };
 
   inline bool OccupancyTask::analyze(void const* _p, Collections _collection) {

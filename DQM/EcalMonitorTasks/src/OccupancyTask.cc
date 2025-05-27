@@ -26,7 +26,6 @@ namespace ecaldqm {
 
   void OccupancyTask::setTokens(edm::ConsumesCollector& _collector) {
     lasertoken_ = _collector.esConsumes();
-    severityToken_ = _collector.esConsumes();
     metaDataToken_ = _collector.consumes<OnlineLuminosityRecord>(metadataTag);
   }
 
@@ -94,7 +93,6 @@ namespace ecaldqm {
       mePU.fill(getEcalDQMSetupObjects(), double(scal_pu));
       FindPUinLS = false;
     }
-    sevLevel = &_es.getData(severityToken_);
   }
 
   void OccupancyTask::runOnRawData(EcalRawDataCollection const& _dcchs) {
@@ -208,15 +206,6 @@ namespace ecaldqm {
     int iSubdet(_collection == kEBRecHit ? EcalBarrel : EcalEndcap);
     std::for_each(_hits.begin(), _hits.end(), [&](EcalRecHitCollection::value_type const& hit) {
       DetId id(hit.id());
-
-      bool isEB = iSubdet == EcalBarrel;
-      if (isEB) {
-        EcalTrigTowerDetId ttid = EBDetId(id).tower();
-        if (hit.energy() >= mapTowerMaxRecHitEnergy[ttid]) {
-          mapTowerMaxRecHitEnergy[ttid] = hit.energy();
-	  mapTowerOfflineSpikes[ttid] = sevLevel->severityLevel(EBDetId(id), _hits);
-	}
-      } // For spike-killer related plots
 
       meRecHitAll.fill(getEcalDQMSetupObjects(), id);
       meRecHitProjEta.fill(getEcalDQMSetupObjects(), id);

@@ -112,6 +112,8 @@ namespace ecaldqm {
       }  //masked
     }  //loop on pseudo-strips
 
+    sevLevel = &_es.getData(severityToken_);
+
     //     if(HLTCaloPath_.size() || HLTMuonPath_.size()){
     //       edm::TriggerResultsByName results(_evt.triggerResultsByName("HLT"));
     //       if(!results.isValid()) results = _evt.triggerResultsByName("RECO");
@@ -180,6 +182,7 @@ namespace ecaldqm {
     lhcStatusInfoRecordToken_ = _collector.consumes<TCDSRecord>(lhcStatusInfoCollectionTag_);
     TTStatusRcd_ = _collector.esConsumes<edm::Transition::BeginRun>();
     StripStatusRcd_ = _collector.esConsumes<edm::Transition::BeginRun>();
+    severityToken_ = _collector.esConsumes();
   }
 
   void TrigPrimTask::runOnRealTPs(EcalTrigPrimDigiCollection const& _tps) {
@@ -376,6 +379,24 @@ namespace ecaldqm {
       if (!matchFG)
         meFGEmulError.fill(getEcalDQMSetupObjects(), ttid);
     }
+  }
+
+  void TrigPrimTask::runOnRecHits(EcalRecHitCollection const& _hits, Collections _collection) {
+    int iSubdet(_collection == kEBRecHit ? EcalBarrel : EcalEndcap);
+    std::for_each(_hits.begin(), _hits.end(), [&](EcalRecHitCollection::value_type const& hit) {
+      DetId id(hit.id());
+
+      bool isEB = iSubdet == EcalBarrel;
+      if (isEB) {
+        EcalTrigTowerDetId ttid = EBDetId(id).tower();
+        if (hit.energy() >= mapTowerMaxRecHitEnergy[ttid]) {
+          mapTowerMaxRecHitEnergy[ttid] = hit.energy();
+	  int bitSeverity = sevLevel->severityLevel(EBDetId(id), _hits);
+          mapTowerOfflineSpikes[ttid] = ((bitSeverity == 3) || (bitSeverity == 4));
+	  std::cout << "mapTowerMaxRecHitEnergy[ttid] = " << mapTowerMaxRecHitEnergy[ttid] << ", mapTowerOfflineSpikes[ttid] = " << mapTowerOfflineSpikes[ttid] << std::endl;
+        }
+      } // For spike-killer related plots
+    });
   }
 
   DEFINE_ECALDQM_WORKER(TrigPrimTask);
