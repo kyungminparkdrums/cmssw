@@ -61,6 +61,8 @@ namespace ecaldqm {
     using namespace std;
 
     towerReadouts_.clear();
+    mapTowerOfflineSpikes_.clear();
+    mapTowerMaxRecHitEnergy_.clear();
 
     if (ByLumiResetSwitch) {
       MEs_.at("EtSummaryByLumi").reset(GetElectronicsMap());
@@ -188,6 +190,7 @@ namespace ecaldqm {
   void TrigPrimTask::runOnRealTPs(EcalTrigPrimDigiCollection const& _tps) {
     MESet& meEtVsBx(MEs_.at("EtVsBx"));
     MESet& meEtReal(MEs_.at("EtReal"));
+    MESet& meEtRealSpikeMatched(MEs_.at("EtRealSpikeMatched"));
     MESet& meEtRealMap(MEs_.at("EtRealMap"));
     MESet& meEtSummary(MEs_.at("EtSummary"));
     MESet& meEtSummaryByLumi(MEs_.at("EtSummaryByLumi"));
@@ -223,6 +226,10 @@ namespace ecaldqm {
       meEtRealMap.fill(getEcalDQMSetupObjects(), ttid, et);
       meEtSummary.fill(getEcalDQMSetupObjects(), ttid, et);
       meEtSummaryByLumi.fill(getEcalDQMSetupObjects(), ttid, et);
+ 
+      if ((ttid.subDet() == EcalBarrel) && (mapTowerOfflineSpikes_[ttid] == 1)) {
+        meEtRealSpikeMatched.fill(getEcalDQMSetupObjects(), ttid, et);
+      }
 
       int interest(tpItr->ttFlag() & 0x3);
 
@@ -389,11 +396,10 @@ namespace ecaldqm {
       bool isEB = iSubdet == EcalBarrel;
       if (isEB) {
         EcalTrigTowerDetId ttid = EBDetId(id).tower();
-        if (hit.energy() >= mapTowerMaxRecHitEnergy[ttid]) {
-          mapTowerMaxRecHitEnergy[ttid] = hit.energy();
+        if (hit.energy() >= mapTowerMaxRecHitEnergy_[ttid]) {
+          mapTowerMaxRecHitEnergy_[ttid] = hit.energy();
 	  int bitSeverity = sevLevel->severityLevel(EBDetId(id), _hits);
-          mapTowerOfflineSpikes[ttid] = ((bitSeverity == 3) || (bitSeverity == 4));
-	  std::cout << "mapTowerMaxRecHitEnergy[ttid] = " << mapTowerMaxRecHitEnergy[ttid] << ", mapTowerOfflineSpikes[ttid] = " << mapTowerOfflineSpikes[ttid] << std::endl;
+          mapTowerOfflineSpikes_[ttid] = ((bitSeverity == 3) || (bitSeverity == 4));
         }
       } // For spike-killer related plots
     });

@@ -213,6 +213,13 @@ ecalTrigPrimTask = cms.untracked.PSet(
             btype = cms.untracked.string('TriggerTower'),
             description = cms.untracked.string('')
         ),
+        TTSpikeOffline = cms.untracked.PSet(
+            path = cms.untracked.string('%(subdet)s/%(prefix)sSelectiveReadoutTask/%(prefix)sSRT TT LUT for Offline Spikes%(suffix)s'),
+            kind = cms.untracked.string('TH2F'),
+            otype = cms.untracked.string('Ecal3P'),
+            btype = cms.untracked.string('TriggerTower'),
+            description = cms.untracked.string('')
+        ),
         EtSummary = cms.untracked.PSet(
             path = cms.untracked.string('%(subdet)s/%(prefix)sSummaryClient/%(prefix)sTTT%(suffix)s Et trigger tower summary'),
             kind = cms.untracked.string('TProfile2D'),
@@ -264,6 +271,19 @@ ecalTrigPrimTask = cms.untracked.PSet(
             ),
             btype = cms.untracked.string('User'),
             description = cms.untracked.string('Distribution of the trigger primitive Et.')
+        ),
+        EtRealSpikeMatched = cms.untracked.PSet(
+            path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Et spectrum Real Digis matched to spikes %(suffix)s'),
+            kind = cms.untracked.string('TH1F'),
+            otype = cms.untracked.string('Ecal3P'),
+            xaxis = cms.untracked.PSet(
+                high = cms.untracked.double(256.0),
+                nbins = cms.untracked.int32(128),
+                low = cms.untracked.double(0.0),
+                title = cms.untracked.string('TP Et')
+            ),
+            btype = cms.untracked.string('User'),
+            description = cms.untracked.string('Distribution of the trigger primitive Et. for TT matched to spikes')
         ),
         RealvEmulEt = cms.untracked.PSet(
             kind = cms.untracked.string('TH2F'),
