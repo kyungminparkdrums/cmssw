@@ -190,7 +190,9 @@ namespace ecaldqm {
   void TrigPrimTask::runOnRealTPs(EcalTrigPrimDigiCollection const& _tps) {
     MESet& meEtVsBx(MEs_.at("EtVsBx"));
     MESet& meEtReal(MEs_.at("EtReal"));
+    MESet& meEtRealIntVsThres(MEs_.at("EtRealIntVsThres"));
     MESet& meEtRealSpikeMatched(MEs_.at("EtRealSpikeMatched"));
+    MESet& meEtRealSpikeMatchedIntVsThres(MEs_.at("EtRealSpikeMatchedIntVsThres"));
     MESet& meEtRealMap(MEs_.at("EtRealMap"));
     MESet& meEtSummary(MEs_.at("EtSummary"));
     MESet& meEtSummaryByLumi(MEs_.at("EtSummaryByLumi"));
@@ -226,9 +228,11 @@ namespace ecaldqm {
       meEtRealMap.fill(getEcalDQMSetupObjects(), ttid, et);
       meEtSummary.fill(getEcalDQMSetupObjects(), ttid, et);
       meEtSummaryByLumi.fill(getEcalDQMSetupObjects(), ttid, et);
- 
-      if ((ttid.subDet() == EcalBarrel) && (mapTowerOfflineSpikes_[ttid] == 1)) {
-        meEtRealSpikeMatched.fill(getEcalDQMSetupObjects(), ttid, et);
+
+      if (ttid.subDet() == EcalBarrel) {
+	if (mapTowerOfflineSpikes_[ttid] == 1) {
+          meEtRealSpikeMatched.fill(getEcalDQMSetupObjects(), ttid, et);
+        }
       }
 
       int interest(tpItr->ttFlag() & 0x3);
@@ -289,6 +293,19 @@ namespace ecaldqm {
         meTTMaskMapAll.setBinContent(getEcalDQMSetupObjects(), ttid, 1);  // PseudoStrip is masked
     }  // PseudoStrips
 
+    // Integrate Et with Et > thres with threshold scan : FIXME -> more efficienct way?
+    int nThresEtBin = 128;
+    
+    for (int thres=0; thres<nThresEtBin; thres++) {
+      int nFiltered = 0;
+      int nFilteredSpikeMatched = 0;
+      for (int iBin=thres; iBin<nThresEtBin; iBin++) { 
+	nFiltered += meEtReal.getBinContent(getEcalDQMSetupObjects(), EcalBarrel, iBin);
+        nFilteredSpikeMatched += meEtRealSpikeMatched.getBinContent(getEcalDQMSetupObjects(), EcalBarrel, iBin);
+      }
+      meEtRealIntVsThres.fill(getEcalDQMSetupObjects(), EcalBarrel, thres, nFiltered);
+      meEtRealSpikeMatchedIntVsThres.fill(getEcalDQMSetupObjects(), EcalBarrel, thres, nFilteredSpikeMatched);
+    }
   }  // TrigPrimTask::runOnRealTPs()
 
   void TrigPrimTask::runOnEmulTPs(EcalTrigPrimDigiCollection const& _tps) {

@@ -285,6 +285,32 @@ ecalTrigPrimTask = cms.untracked.PSet(
             btype = cms.untracked.string('User'),
             description = cms.untracked.string('Distribution of the trigger primitive Et. for TT matched to spikes')
         ),
+        EtRealIntVsThres = cms.untracked.PSet(
+            path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Rate of TP with Et above threshold vs Et Digis%(suffix)s'),
+            kind = cms.untracked.string('TProfile'),
+            otype = cms.untracked.string('Ecal3P'),
+            xaxis = cms.untracked.PSet(
+                high = cms.untracked.double(256.0),
+                nbins = cms.untracked.int32(128),
+                low = cms.untracked.double(0.0),
+                title = cms.untracked.string('Et threshold (ADC)'),
+            ),
+            btype = cms.untracked.string('User'),
+            description = cms.untracked.string('Rate (TP Et > threshold)')
+        ),
+        EtRealSpikeMatchedIntVsThres = cms.untracked.PSet(
+            path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Rate of TP with Et above threshold (spike matched) vs Et Digis%(suffix)s'),
+            kind = cms.untracked.string('TProfile'),
+            otype = cms.untracked.string('Ecal3P'),
+            xaxis = cms.untracked.PSet(
+                high = cms.untracked.double(256.0),
+                nbins = cms.untracked.int32(128),
+                low = cms.untracked.double(0.0),
+                title = cms.untracked.string('Et threshold (ADC)'),
+            ),
+            btype = cms.untracked.string('User'),
+            description = cms.untracked.string('Rate (TP Et > threshold) for spike matched')
+        ),
         RealvEmulEt = cms.untracked.PSet(
             kind = cms.untracked.string('TH2F'),
             xaxis = cms.untracked.PSet(
