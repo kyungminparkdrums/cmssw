@@ -287,7 +287,7 @@ ecalTrigPrimTask = cms.untracked.PSet(
         ),
         EtRealIntVsThres = cms.untracked.PSet(
             path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Rate of TP with Et above threshold vs Et Digis%(suffix)s'),
-            kind = cms.untracked.string('TProfile'),
+            kind = cms.untracked.string('TH1F'),
             otype = cms.untracked.string('Ecal3P'),
             xaxis = cms.untracked.PSet(
                 high = cms.untracked.double(256.0),
@@ -300,7 +300,7 @@ ecalTrigPrimTask = cms.untracked.PSet(
         ),
         EtRealSpikeMatchedIntVsThres = cms.untracked.PSet(
             path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Rate of TP with Et above threshold (spike matched) vs Et Digis%(suffix)s'),
-            kind = cms.untracked.string('TProfile'),
+            kind = cms.untracked.string('TH1F'),
             otype = cms.untracked.string('Ecal3P'),
             xaxis = cms.untracked.PSet(
                 high = cms.untracked.double(256.0),

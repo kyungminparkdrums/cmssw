@@ -296,15 +296,15 @@ namespace ecaldqm {
     // Integrate Et with Et > thres with threshold scan : FIXME -> more efficienct way?
     int nThresEtBin = 128;
     
-    for (int thres=0; thres<nThresEtBin; thres++) {
+    for (int thres=1; thres<=nThresEtBin; thres++) {
       int nFiltered = 0;
       int nFilteredSpikeMatched = 0;
-      for (int iBin=thres; iBin<nThresEtBin; iBin++) { 
+      for (int iBin=thres; iBin<=nThresEtBin; iBin++) {
 	nFiltered += meEtReal.getBinContent(getEcalDQMSetupObjects(), EcalBarrel, iBin);
         nFilteredSpikeMatched += meEtRealSpikeMatched.getBinContent(getEcalDQMSetupObjects(), EcalBarrel, iBin);
       }
-      meEtRealIntVsThres.fill(getEcalDQMSetupObjects(), EcalBarrel, thres, nFiltered);
-      meEtRealSpikeMatchedIntVsThres.fill(getEcalDQMSetupObjects(), EcalBarrel, thres, nFilteredSpikeMatched);
+      meEtRealIntVsThres.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, nFiltered);
+      meEtRealSpikeMatchedIntVsThres.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, nFilteredSpikeMatched);
     }
   }  // TrigPrimTask::runOnRealTPs()
 
