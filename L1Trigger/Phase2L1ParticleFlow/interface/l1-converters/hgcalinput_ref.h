@@ -22,7 +22,12 @@ namespace l1ct {
                                 const std::vector<double> &wp_PFEm,
                                 const std::vector<double> &wp_EgEm,
                                 const std::vector<double> &wp_EgEm_tight,
-                                bool slim = false,
+                                const std::vector<double> &wp_PU_noTk,
+                                const std::vector<double> &wp_Pi_noTk,
+                                const std::vector<double> &wp_PFEm_noTk,
+                                const std::vector<double> &wp_EgEm_noTk,
+                                const std::vector<double> &wp_EgEm_tight_noTk,
+				bool slim = false,
                                 const std::string &corrector = "",
                                 float correctorEmfMax = -1,
                                 bool emulateCorrections = false,
@@ -40,7 +45,12 @@ namespace l1ct {
                    const std::vector<double> &wp_Pi,
                    const std::vector<double> &wp_PFEm,
                    const std::vector<double> &wp_EgEm,
-                   const std::vector<double> &wp_EgEm_tight);
+                   const std::vector<double> &wp_EgEm_tight,
+		   const std::vector<double> &wp_PU_noTk,
+                   const std::vector<double> &wp_Pi_noTk,
+                   const std::vector<double> &wp_PFEm_noTk,
+                   const std::vector<double> &wp_EgEm_noTk,
+                   const std::vector<double> &wp_EgEm_tight_noTk);
       MultiClassID(const edm::ParameterSet &pset);
       static edm::ParameterSetDescription getParameterSetDescription();
 
@@ -55,6 +65,12 @@ namespace l1ct {
       std::vector<l1ct::id_prob_t> wp_PFEm_;
       std::vector<l1ct::id_prob_t> wp_EgEm_;
       std::vector<l1ct::id_prob_t> wp_EgEm_tight_;
+      std::vector<l1ct::id_prob_t> wp_PU_noTk_;
+      std::vector<l1ct::id_prob_t> wp_Pi_noTk_;
+      std::vector<l1ct::id_prob_t> wp_PFEm_noTk_;
+      std::vector<l1ct::id_prob_t> wp_EgEm_noTk_;
+      std::vector<l1ct::id_prob_t> wp_EgEm_tight_noTk_;
+
 
       typedef ap_fixed<18, 8> activation_table_t;
       typedef ap_fixed<18, 8, AP_RND, AP_SAT> activation_exp_table_t;

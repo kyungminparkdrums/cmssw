@@ -34,7 +34,12 @@ l1ct::HgcalClusterDecoderEmulator::MultiClassID::MultiClassID(const edm::Paramet
           pset.getParameter<std::vector<double>>("wp_Pi"),
           pset.getParameter<std::vector<double>>("wp_PFEm"),
           pset.getParameter<std::vector<double>>("wp_EgEm"),
-          pset.getParameter<std::vector<double>>("wp_EgEm_tight")) {}
+          pset.getParameter<std::vector<double>>("wp_EgEm_tight"),
+	  pset.getParameter<std::vector<double>>("wp_PU_noTk"),
+          pset.getParameter<std::vector<double>>("wp_Pi_noTk"),
+          pset.getParameter<std::vector<double>>("wp_PFEm_noTk"),
+          pset.getParameter<std::vector<double>>("wp_EgEm_noTk"),
+          pset.getParameter<std::vector<double>>("wp_EgEm_tight_noTk")) {}
 
 edm::ParameterSetDescription l1ct::HgcalClusterDecoderEmulator::MultiClassID::getParameterSetDescription() {
   edm::ParameterSetDescription description;
@@ -45,6 +50,11 @@ edm::ParameterSetDescription l1ct::HgcalClusterDecoderEmulator::MultiClassID::ge
   description.add<std::vector<double>>("wp_EgEm");
   description.add<std::vector<double>>("wp_EgEm_tight");
   description.add<std::vector<double>>("wp_PFEm");
+  description.add<std::vector<double>>("wp_PU_noTk");
+  description.add<std::vector<double>>("wp_Pi_noTk");
+  description.add<std::vector<double>>("wp_EgEm_noTk");
+  description.add<std::vector<double>>("wp_EgEm_tight_noTk");
+  description.add<std::vector<double>>("wp_PFEm_noTk");
   return description;
 }
 
@@ -57,13 +67,18 @@ l1ct::HgcalClusterDecoderEmulator::HgcalClusterDecoderEmulator(const std::string
                                                                const std::vector<double> &wp_PFEm,
                                                                const std::vector<double> &wp_EgEm,
                                                                const std::vector<double> &wp_EgEm_tight,
-                                                               bool slim,
+                                                               const std::vector<double> &wp_PU_noTk,
+                                                               const std::vector<double> &wp_Pi_noTk,
+                                                               const std::vector<double> &wp_PFEm_noTk,
+                                                               const std::vector<double> &wp_EgEm_noTk,
+                                                               const std::vector<double> &wp_EgEm_tight_noTk,
+							       bool slim,
                                                                const std::string &corrector,
                                                                float correctorEmfMax,
                                                                bool emulateCorrections,
                                                                const std::string &emInterpScenario)
     : slim_{slim},
-      multiclass_id_(model, wp_pt, wp_PU, wp_Pi, wp_PFEm, wp_EgEm, wp_EgEm_tight),
+      multiclass_id_(model, wp_pt, wp_PU, wp_Pi, wp_PFEm, wp_EgEm, wp_EgEm_tight, wp_PU_noTk, wp_Pi_noTk, wp_PFEm_noTk, wp_EgEm_noTk, wp_EgEm_tight_noTk),
       corrector_(corrector, correctorEmfMax, false, emulateCorrections, l1tpf::corrector::EmulationMode::Correction),
       emInterpScenario_(setEmInterpScenario(emInterpScenario)) {}
 
@@ -183,7 +198,12 @@ l1ct::HgcalClusterDecoderEmulator::MultiClassID::MultiClassID(const std::string 
                                                               const std::vector<double> &wp_Pi,
                                                               const std::vector<double> &wp_PFEm,
                                                               const std::vector<double> &wp_EgEm,
-                                                              const std::vector<double> &wp_EgEm_tight) {
+                                                              const std::vector<double> &wp_EgEm_tight,
+                                                              const std::vector<double> &wp_PU_noTk,
+                                                              const std::vector<double> &wp_Pi_noTk,
+                                                              const std::vector<double> &wp_PFEm_noTk,
+                                                              const std::vector<double> &wp_EgEm_noTk,
+                                                              const std::vector<double> &wp_EgEm_tight_noTk) {
   for (auto pt : wp_pt)
     wp_pt_.emplace_back(pt);
   for (auto pu : wp_PU)
@@ -196,6 +216,17 @@ l1ct::HgcalClusterDecoderEmulator::MultiClassID::MultiClassID(const std::string 
     wp_PFEm_.emplace_back(pfem);
   for (auto egem : wp_EgEm_tight)
     wp_EgEm_tight_.emplace_back(egem);
+
+  for (auto pu_noTk : wp_PU_noTk)
+    wp_PU_noTk_.emplace_back(pu_noTk);
+  for (auto pi_noTk : wp_Pi_noTk)
+    wp_Pi_noTk_.emplace_back(pi_noTk);
+  for (auto egem_noTk : wp_EgEm_noTk)
+    wp_EgEm_noTk_.emplace_back(egem_noTk);
+  for (auto pfem_noTk : wp_PFEm_noTk)
+    wp_PFEm_noTk_.emplace_back(pfem_noTk);
+  for (auto egem_noTk : wp_EgEm_tight_noTk)
+    wp_EgEm_tight_noTk_.emplace_back(egem_noTk);
 
 #ifdef CMSSW_GIT_HASH
   auto resolvedFileName = edm::FileInPath(model).fullPath();
@@ -221,12 +252,30 @@ bool l1ct::HgcalClusterDecoderEmulator::MultiClassID::evaluate(l1ct::HadCaloObjE
       break;
     }
   }
-  bool passPu = (sm_scores[0] >= wp_PU_[pt_bin]);
-  // bool passPi = (sm_scores[1] >= wp_Pi_[pt_bin]);  // FIXME: where do we store this?
-  bool passPFEm = (sm_scores[2] >= wp_PFEm_[pt_bin]);
-  bool passEgEm = (sm_scores[2] >= wp_EgEm_[pt_bin]);
-  bool passEgEm_tight = (sm_scores[2] >= wp_EgEm_tight_[pt_bin]);
 
+  double fabseta = double(inputs[3]+256) * (3.141592653/720);
+  //double fabseta = fabs(cl.hwEta) * (3.141592653/720);
+  //std::cout << "eta = " << fabseta << std::endl;
+
+  bool passPu;
+  bool passPFEm;
+  bool passEgEm;
+  bool passEgEm_tight;
+
+  if (fabseta < 2.4) {  
+    passPu = (sm_scores[0] >= wp_PU_[pt_bin]);
+    // bool passPi = (sm_scores[1] >= wp_Pi_[pt_bin]);  // FIXME: where do we store this?
+    passPFEm = (sm_scores[2] >= wp_PFEm_[pt_bin]);
+    passEgEm = (sm_scores[2] >= wp_EgEm_[pt_bin]);
+    passEgEm_tight = (sm_scores[2] >= wp_EgEm_tight_[pt_bin]);
+  }
+  else {
+    passPu = (sm_scores[0] >= wp_PU_noTk_[pt_bin]);
+    // bool passPi = (sm_scores[1] >= wp_Pi_[pt_bin]);  // FIXME: where do we store this?
+    passPFEm = (sm_scores[2] >= wp_PFEm_noTk_[pt_bin]);
+    passEgEm = (sm_scores[2] >= wp_EgEm_noTk_[pt_bin]);
+    passEgEm_tight = (sm_scores[2] >= wp_EgEm_tight_noTk_[pt_bin]);
+  }
   // bit 0: PF EM ID
   // bit 1: EG EM ID
   // bit 2: EG Loose ID
