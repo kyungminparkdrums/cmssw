@@ -43,6 +43,8 @@ namespace ecaldqm {
 
     enum Constants { nBXBins = 15 };
 
+    void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+
   private:
     void setParams(edm::ParameterSet const&) override;
 
@@ -59,6 +61,9 @@ namespace ecaldqm {
     std::vector<int> bxBinEdgesFine_;
     double bxBin_;
     double bxBinFine_;
+
+    double etSum_;
+    double etSpikeMatchSum_;
 
     std::map<uint32_t, unsigned> towerReadouts_;
 

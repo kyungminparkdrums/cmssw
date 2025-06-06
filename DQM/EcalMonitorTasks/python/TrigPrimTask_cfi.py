@@ -285,6 +285,19 @@ ecalTrigPrimTask = cms.untracked.PSet(
             btype = cms.untracked.string('User'),
             description = cms.untracked.string('Distribution of the trigger primitive Et. for TT matched to spikes')
         ),
+        EffSpikeMatch = cms.untracked.PSet(
+            path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Efficiency of spike killer matching%(suffix)s'),
+            kind = cms.untracked.string('TH1F'),
+            otype = cms.untracked.string('Ecal3P'),
+            xaxis = cms.untracked.PSet(
+                high = cms.untracked.double(256.0),
+                nbins = cms.untracked.int32(128),
+                low = cms.untracked.double(0.0),
+                title = cms.untracked.string('Et threshold')
+            ),
+            btype = cms.untracked.string('User'),
+            description = cms.untracked.string('Efficiency of spike killer matching')
+        ), 
         EtRealIntVsThres = cms.untracked.PSet(
             path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Rate of TP with Et above threshold vs Et Digis%(suffix)s'),
             kind = cms.untracked.string('TH1F'),
@@ -329,6 +342,20 @@ ecalTrigPrimTask = cms.untracked.PSet(
             btype = cms.untracked.string('User'),
             path = cms.untracked.string('%(subdet)s/%(prefix)sTriggerTowerTask/%(prefix)sTTT Real vs Emulated TP Et%(suffix)s'),
             description = cms.untracked.string('Real data VS emulated TP Et (in-time)')
+        ),
+        TrendEtSum = cms.untracked.PSet(
+            path = cms.untracked.string('Ecal/Trends/TriggerTowerTask Et sum of TPs above thres'),
+            kind = cms.untracked.string('TProfile'),
+            otype = cms.untracked.string('Ecal2P'),
+            btype = cms.untracked.string('Trend'),
+            description = cms.untracked.string('Trend of Et sum of TPs with Et > 30 GeV.')
+        ),
+        TrendEtSpikeMatchSum = cms.untracked.PSet(
+            path = cms.untracked.string('Ecal/Trends/TriggerTowerTask Et sum of TPs above thres (Spike Matched)'),
+            kind = cms.untracked.string('TProfile'),
+            otype = cms.untracked.string('Ecal2P'),
+            btype = cms.untracked.string('Trend'),
+            description = cms.untracked.string('Trend of Et sum of TPs (spike-matched) with Et > 30 GeV.')
         ),
         LHCStatusByLumi = cms.untracked.PSet(
             path = cms.untracked.string('Ecal/Trends/LHC status by lumi'),

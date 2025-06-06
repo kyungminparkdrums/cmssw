@@ -35,6 +35,7 @@ namespace ecaldqm {
       MEs_.erase(std::string("FGEmulError"));
       MEs_.erase(std::string("RealvEmulEt"));
     }
+
     lhcStatusInfoCollectionTag_ = _params.getUntrackedParameter<edm::InputTag>(
         "lhcStatusInfoCollectionTag", edm::InputTag("tcdsDigis", "tcdsRecord"));
     bxBinEdges_ = _params.getUntrackedParameter<std::vector<int> >("bxBins");
@@ -67,8 +68,8 @@ namespace ecaldqm {
     if (ByLumiResetSwitch) {
       MEs_.at("EtSummaryByLumi").reset(GetElectronicsMap());
       MEs_.at("TTFlags4ByLumi").reset(GetElectronicsMap());
-      MEs_.at("LHCStatusByLumi").reset(GetElectronicsMap(), -1);
-    }
+      MEs_.at("LHCStatusByLumi").reset(GetElectronicsMap(), -1);      
+   }
 
     if (!lhcStatusSet) {
       // Update LHC status once each LS
@@ -193,6 +194,7 @@ namespace ecaldqm {
     MESet& meEtRealIntVsThres(MEs_.at("EtRealIntVsThres"));
     MESet& meEtRealSpikeMatched(MEs_.at("EtRealSpikeMatched"));
     MESet& meEtRealSpikeMatchedIntVsThres(MEs_.at("EtRealSpikeMatchedIntVsThres"));
+    MESet& meEffSpikeMatch(MEs_.at("EffSpikeMatch"));
     MESet& meEtRealMap(MEs_.at("EtRealMap"));
     MESet& meEtSummary(MEs_.at("EtSummary"));
     MESet& meEtSummaryByLumi(MEs_.at("EtSummaryByLumi"));
@@ -229,9 +231,12 @@ namespace ecaldqm {
       meEtSummary.fill(getEcalDQMSetupObjects(), ttid, et);
       meEtSummaryByLumi.fill(getEcalDQMSetupObjects(), ttid, et);
 
+      if (et > 30) etSum_ += et;
+      
       if (ttid.subDet() == EcalBarrel) {
 	if (mapTowerOfflineSpikes_[ttid] == 1) {
           meEtRealSpikeMatched.fill(getEcalDQMSetupObjects(), ttid, et);
+          if (et > 30) etSpikeMatchSum_ += et;
         }
       }
 
@@ -305,6 +310,7 @@ namespace ecaldqm {
       }
       meEtRealIntVsThres.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, nFiltered);
       meEtRealSpikeMatchedIntVsThres.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, nFilteredSpikeMatched);
+      meEffSpikeMatch.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, double(nFilteredSpikeMatched)/nFiltered);
     }
   }  // TrigPrimTask::runOnRealTPs()
 
@@ -420,6 +426,17 @@ namespace ecaldqm {
         }
       } // For spike-killer related plots
     });
+  }
+
+  void TrigPrimTask::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {
+    MESet& meTrendEtSum(MEs_.at("TrendEtSum"));
+    MESet& meTrendEtSpikeMatchSum(MEs_.at("TrendEtSpikeMatchSum"));
+
+    meTrendEtSum.fill(getEcalDQMSetupObjects(), EcalBarrel, double(timestamp_.iLumi), etSum_);
+    meTrendEtSpikeMatchSum.fill(getEcalDQMSetupObjects(), EcalBarrel, double(timestamp_.iLumi), etSpikeMatchSum_);
+    
+    etSum_ = 0.;
+    etSpikeMatchSum_ = 0.;
   }
 
   DEFINE_ECALDQM_WORKER(TrigPrimTask);
