@@ -310,7 +310,8 @@ namespace ecaldqm {
       }
       meEtRealIntVsThres.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, nFiltered);
       meEtRealSpikeMatchedIntVsThres.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, nFilteredSpikeMatched);
-      meEffSpikeMatch.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, double(nFilteredSpikeMatched)/nFiltered);
+      if (nFiltered != 0)
+        meEffSpikeMatch.setBinContent(getEcalDQMSetupObjects(), EcalBarrel, thres, double(nFilteredSpikeMatched)/nFiltered);
     }
   }  // TrigPrimTask::runOnRealTPs()
 
