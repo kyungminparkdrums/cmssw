@@ -36,6 +36,7 @@ namespace ecaldqm {
     bool splashSwitch_;
 
     MESet* meTimeMapByLS;
+    MESet* meTimeMapByLS_ccAlgo;
   };
 
   inline bool TimingTask::analyze(void const* _p, Collections _collection) {
