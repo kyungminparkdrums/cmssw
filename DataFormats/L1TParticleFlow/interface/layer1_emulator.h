@@ -73,6 +73,9 @@ namespace l1ct {
     const l1t::PFTrack *srcTrack = nullptr;
     const l1t::SAMuon *srcMu = nullptr;
     const l1t::PFCandidate *srcCand = nullptr;
+    float idProbPu;
+    float idProbEm;
+    float idProbPi;
     bool read(std::fstream &from);
     bool write(std::fstream &to) const;
     void clear() {
@@ -81,18 +84,27 @@ namespace l1ct {
       srcTrack = nullptr;
       srcMu = nullptr;
       srcCand = nullptr;
+      idProbPu = 0;
+      idProbEm = 0;
+      idProbPi = 0;
     }
   };
 
   struct PFNeutralObjEmu : public PFNeutralObj {
     const l1t::L1Candidate *srcCluster = nullptr;
     const l1t::PFCandidate *srcCand = nullptr;
+    float idProbPu;
+    float idProbEm;
+    float idProbPi;
     bool read(std::fstream &from);
     bool write(std::fstream &to) const;
     void clear() {
       PFNeutralObj::clear();
       srcCluster = nullptr;
       srcCand = nullptr;
+      idProbPu = 0;
+      idProbEm = 0;
+      idProbPi = 0;
     }
   };
 
@@ -116,6 +128,11 @@ namespace l1ct {
     const l1t::PFTrack *srcTrack = nullptr;
     const l1t::SAMuon *srcMu = nullptr;
     const l1t::PFCandidate *srcCand = nullptr;
+    float idProbPu;
+    float idProbEm;
+    float idProbPi;
+    float nnVtxScore;
+
     bool read(std::fstream &from);
     bool write(std::fstream &to) const;
     void clear() {
@@ -124,6 +141,10 @@ namespace l1ct {
       srcTrack = nullptr;
       srcMu = nullptr;
       srcCand = nullptr;
+      idProbPu = 0;
+      idProbEm = 0;
+      idProbPi = 0;
+      nnVtxScore = 0;
     }
     inline void fill(const PFRegionEmu &region, const PFChargedObjEmu &src) {
       PuppiObj::fill(region, src);
@@ -131,6 +152,9 @@ namespace l1ct {
       srcTrack = src.srcTrack;
       srcMu = src.srcMu;
       srcCand = src.srcCand;
+      idProbPu = src.idProbPu;
+      idProbEm = src.idProbEm;
+      idProbPi = src.idProbPi;
     }
     inline void fill(const PFRegionEmu &region, const PFNeutralObjEmu &src, pt_t puppiPt, puppiWgt_t puppiWgt) {
       PuppiObj::fill(region, src, puppiPt, puppiWgt);
@@ -138,6 +162,9 @@ namespace l1ct {
       srcTrack = nullptr;
       srcMu = nullptr;
       srcCand = src.srcCand;
+      idProbPu = src.idProbPu;
+      idProbEm = src.idProbEm;
+      idProbPi = src.idProbPi;
     }
     inline void fill(const PFRegionEmu &region, const HadCaloObjEmu &src, pt_t puppiPt, puppiWgt_t puppiWgt) {
       PuppiObj::fill(region, src, puppiPt, puppiWgt);
@@ -145,6 +172,9 @@ namespace l1ct {
       srcTrack = nullptr;
       srcMu = nullptr;
       srcCand = nullptr;
+      idProbPu = src.hwPuProb().to_float();
+      idProbEm = src.hwEmProb.to_float();
+      idProbPi = src.hwPiProb.to_float();
     }
   };
 
