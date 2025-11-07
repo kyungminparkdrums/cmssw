@@ -81,7 +81,7 @@ l1ct::LinPuppiEmulator::LinPuppiEmulator(unsigned int nTrack,
       nFinalSort_(nFinalSort ? nFinalSort : nOut),
       finalSortAlgo_(finalSortAlgo),
       debug_(false),
-      fakePuppi_(false) {
+      fakePuppi_(true) {
   ptSlopeNe_[0] = ptSlopeNe_0;
   ptSlopeNe_[1] = ptSlopeNe_1;
   ptSlopePh_[0] = ptSlopePh_0;
@@ -214,7 +214,7 @@ edm::ParameterSetDescription l1ct::LinPuppiEmulator::getParameterSetDescription(
   description.ifValue(edm::ParameterDescription<std::string>("finalSortAlgo", "Insertion", true),
                       edm::allowedValues<std::string>(
                           "Insertion", "BitonicRUFL", "BitonicHLS", "Hybrid", "FoldedHybrid", "BitonicVHDL"));
-  description.add<bool>("fakePuppi", false);
+  description.add<bool>("fakePuppi", true);
   description.addUntracked<bool>("debug", false);
   return description;
 }
@@ -292,7 +292,7 @@ void l1ct::LinPuppiEmulator::linpuppi_chs_ref(const PFRegionEmu &region,
           nnVtxAssoc_->TTTrackNetworkSelector<const l1ct::PFChargedObjEmu>(region, pfch[i], pv[j], nnvtx_score) == 1)
         pass_network = true;
     }
-    bool accept = pfch[i].hwPt != 0;
+    bool accept = pfch[i].hwPt != 0 && region.isFiducial(pfch[i]); // require the candidate to be in the fiducial area (not in the overlap area)
     if (!fakePuppi_ && !useMLAssociation_)
       accept = accept && region.isFiducial(pfch[i]) && (std::abs(z0diff) <= int(dzCut_) || pfch[i].hwId.isMuon());
     if (!fakePuppi_ && useMLAssociation_)
@@ -305,10 +305,11 @@ void l1ct::LinPuppiEmulator::linpuppi_chs_ref(const PFRegionEmu &region,
         outallch[i].setHwTkQuality(region.isFiducial(pfch[i]) ? 1 : 0);
       }
       if (debug_ && pfch[i].hwPt > 0)
-        dbgPrintf("ref candidate %02u pt %7.2f pid %1d   vz %+6d  dz %+6d (cut %5d), fid %1d -> pass, packed %s\n",
+        dbgPrintf("ref charged candidate %02u pt %7.2f eta %f  pid %1d   vz %+6d  dz %+6d (cut %5d), fid %1d -> pass, packed %s\n",
                   i,
                   pfch[i].floatPt(),
-                  pfch[i].intId(),
+		  region.floatGlbEtaOf(pfch[i]),
+		  pfch[i].intId(),
                   int(pfch[i].hwZ0),
                   z0diff,
                   dzCut_,
@@ -317,9 +318,10 @@ void l1ct::LinPuppiEmulator::linpuppi_chs_ref(const PFRegionEmu &region,
     } else {
       outallch[i].clear();
       if (debug_ && pfch[i].hwPt > 0)
-        dbgPrintf("ref candidate %02u pt %7.2f pid %1d   vz %+6d  dz %+6d (cut %5d), fid %1d -> fail\n",
+        dbgPrintf("ref charged candidate %02u pt %7.2f eta %f pid %1d   vz %+6d  dz %+6d (cut %5d), fid %1d -> fail\n",
                   i,
                   pfch[i].floatPt(),
+                  region.floatGlbEtaOf(pfch[i]),
                   pfch[i].intId(),
                   int(pfch[i].hwZ0),
                   z0diff,
@@ -411,7 +413,7 @@ std::pair<pt_t, puppiWgt_t> l1ct::LinPuppiEmulator::sum2puppiPt_ref(
 
   if (debug_)
     dbgPrintf(
-        "ref candidate %02d pt %7.2f  em %1d  ieta %1d: sum %10.4f alpha %+7.2f   x2a %+7.3f  x2pt %+7.3f   x2 %+7.3f  "
+        "ref neutral candidate %02d pt %7.2f  em %1d  ieta %1d: sum %10.4f alpha %+7.2f   x2a %+7.3f  x2pt %+7.3f   x2 %+7.3f  "
         "--> weight %.4f  puppi pt %7.2f\n",
         icand,
         Scales::floatPt(pt),
@@ -459,8 +461,12 @@ void l1ct::LinPuppiEmulator::fwdlinpuppi_ref(const PFRegionEmu &region,
     unsigned int ieta = find_ieta(region, caloin[in].hwEta);
     std::pair<pt_t, puppiWgt_t> ptAndW = sum2puppiPt_ref(sum, caloin[in].hwPt, ieta, caloin[in].hwIsEM(), in);
 
-    outallne_nocut[in].fill(region, caloin[in], ptAndW.first, ptAndW.second);
-    if (region.isFiducial(caloin[in]) && outallne_nocut[in].hwPt >= ptCut_[ieta]) {
+    if (!fakePuppi_ && region.isFiducial(caloin[in]) && outallne_nocut[in].hwPt >= ptCut_[ieta]) {
+      outallne_nocut[in].fill(region, caloin[in], ptAndW.first, ptAndW.second);
+      outallne[in] = outallne_nocut[in];
+    }
+    else if (fakePuppi_ && region.isFiducial(caloin[in])) { // fakePuppi: keep the full candidate, but set the Puppi weight and some debug info into it
+      outallne_nocut[in].fill(region, caloin[in], caloin[in].hwPt, ptAndW.second);
       outallne[in] = outallne_nocut[in];
     }
   }
@@ -537,18 +543,21 @@ void l1ct::LinPuppiEmulator::linpuppi_ref(const PFRegionEmu &region,
         outallne[in] = outallne_nocut[in];
       }
     } else {  // fakePuppi: keep the full candidate, but set the Puppi weight and some debug info into it
-      outallne_nocut[in].fill(region, pfallne[in], pfallne[in].hwPt, ptAndW.second);
-      outallne_nocut[in].hwData[9] = region.isFiducial(pfallne[in]);
-      outallne_nocut[in].hwData(20, 10) = ptAndW.first(10, 0);
-      outallne[in] = outallne_nocut[in];
+      if (region.isFiducial(pfallne[in])){ // fill in only if region is fiducial
+        outallne_nocut[in].fill(region, pfallne[in], pfallne[in].hwPt, ptAndW.second);
+        outallne_nocut[in].hwData[9] = region.isFiducial(pfallne[in]);
+        outallne_nocut[in].hwData(20, 10) = ptAndW.first(10, 0);
+        outallne[in] = outallne_nocut[in];
+      }
     }
-    if (debug_ && pfallne[in].hwPt > 0 && outallne_nocut[in].hwPt > 0) {
-      dbgPrintf("ref candidate %02u pt %7.2f  -> puppi pt %7.2f, fiducial %1d, packed %s\n",
-                in,
-                pfallne[in].floatPt(),
-                outallne_nocut[in].floatPt(),
-                int(region.isFiducial(pfallne[in])),
-                outallne_nocut[in].pack().to_string(16).c_str());
+    if (debug_ && pfallne[in].hwPt > 0 && outallne_nocut[in].hwPt > 0 && region.isFiducial(pfallne[in])) {
+      dbgPrintf("ref candidate %02u pt %7.2f eta %+6.3f -> puppi pt %7.2f, fiducial %1d, packed %s\n",
+          in,
+          pfallne[in].floatPt(),
+          region.floatGlbEtaOf(pfallne[in]),
+          outallne_nocut[in].floatPt(),
+          int(region.isFiducial(pfallne[in])),
+          outallne_nocut[in].pack().to_string(16).c_str());
     }
   }
   puppisort_and_crop_ref(nOut_, outallne, outselne);
