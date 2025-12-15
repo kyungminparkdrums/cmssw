@@ -147,6 +147,7 @@ namespace l1ct {
       unpack_from_bits(src, start, hwPhi);
       unpack_from_bits(src, start, hwZ0);
       unpack_from_bits(src, start, hwMassSq);
+      start = start + 10;  //offset for LLP + unassigned
       for (unsigned i = 0; i < NTagFields; i++) {
         unpack_from_bits(src, start, hwTagScores[i]);
       }
