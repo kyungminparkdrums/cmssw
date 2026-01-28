@@ -106,6 +106,8 @@ namespace L1JUMPEmu {
         break;
       }
     }
+    // If abseta >= all bin edges, etabin remains 0, which is reserved for overflow (jets beyond max eta range).
+    // This is intentional: par0[0] and par1[0] should be set for this overflow bin.
 
     dPx_2 = 0;
     dPy_2 = 0;
