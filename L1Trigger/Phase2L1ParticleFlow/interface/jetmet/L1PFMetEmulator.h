@@ -127,6 +127,10 @@ namespace L1METEmu {
         break;
       }
     }
+    // Handle the edge case where hwPhi is exactly equal to the last bin edge
+    if (hwPhi == P.phi_edges[P.phi_bins]) {
+      phibin = P.phi_bins - 1;
+    }
 
     Particle_xy proj_xy;
 
