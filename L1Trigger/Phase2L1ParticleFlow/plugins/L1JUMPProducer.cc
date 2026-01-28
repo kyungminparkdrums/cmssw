@@ -108,7 +108,7 @@ void L1JUMPProducer::CalcJUMP_HLS(const l1t::EtSum& metVector,
   outMet_Vector.SetEta(0);
 }
 
-std::vector<l1ct::Jet> L1JUMPProducer::convertEDMToHW(const std::vector<l1t::PFJet> edmJets) const {
+std::vector<l1ct::Jet> L1JUMPProducer::convertEDMToHW(const std::vector<l1t::PFJet>& edmJets) const {
   std::vector<l1ct::Jet> hwJets;
   std::for_each(edmJets.begin(), edmJets.end(), [&](const l1t::PFJet& jet) {
     l1ct::Jet hwJet = l1ct::Jet::unpack(jet.getHWJetCT());
