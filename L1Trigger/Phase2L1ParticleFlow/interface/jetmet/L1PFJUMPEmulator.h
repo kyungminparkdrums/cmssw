@@ -144,10 +144,12 @@ inline void JUMP_emu(const l1ct::Sum& inMet, const std::vector<l1ct::Jet>& jets,
   L1JUMPEmu::Met_dPt(jets, dPx_2, dPy_2);
 
   L1METEmu::Particle_xy outMet_xy;
-  outMet_xy.hwPx = (inMet_xy.hwPx > 0) ? inMet_xy.hwPx + L1METEmu::proj2_t(sqrt(dPx_2.to_float()))
-                                       : inMet_xy.hwPx - L1METEmu::proj2_t(sqrt(dPx_2.to_float()));
-  outMet_xy.hwPy = (inMet_xy.hwPy > 0) ? inMet_xy.hwPy + L1METEmu::proj2_t(sqrt(dPy_2.to_float()))
-                                       : inMet_xy.hwPy - L1METEmu::proj2_t(sqrt(dPy_2.to_float()));
+  float sqrt_dPx_2 = sqrt(dPx_2.to_float());
+  float sqrt_dPy_2 = sqrt(dPy_2.to_float());
+  outMet_xy.hwPx = (inMet_xy.hwPx > 0) ? inMet_xy.hwPx + L1METEmu::proj2_t(sqrt_dPx_2)
+                                       : inMet_xy.hwPx - L1METEmu::proj2_t(sqrt_dPx_2);
+  outMet_xy.hwPy = (inMet_xy.hwPy > 0) ? inMet_xy.hwPy + L1METEmu::proj2_t(sqrt_dPy_2)
+                                       : inMet_xy.hwPy - L1METEmu::proj2_t(sqrt_dPy_2);
   L1METEmu::pxpy_to_ptphi(outMet_xy, outMet);
 }
 
