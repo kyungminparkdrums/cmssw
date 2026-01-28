@@ -88,7 +88,7 @@ namespace L1JUMPEmu {
     return P;
   }
 
-  inline void Get_dPt(const l1ct::Jet jet, L1METEmu::proj2_t& dPx_2, L1METEmu::proj2_t& dPy_2) {
+  inline void Get_dPt(const l1ct::Jet& jet, L1METEmu::proj2_t& dPx_2, L1METEmu::proj2_t& dPy_2) {
     /*
       L1 Jet Energy Resolution parameterization
       - Fitted σ(pT)/pT as a function of jet pT in each η region (detector boundary at η≈1.3, 1.7, 2.5, 3.0)
