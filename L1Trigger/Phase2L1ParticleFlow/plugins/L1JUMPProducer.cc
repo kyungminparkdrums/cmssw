@@ -42,9 +42,7 @@ private:
   typedef l1ct::pt_t pt_t;
   typedef l1ct::Jet Jet;
 
-  static constexpr float ptLSB_ = 0.25;
   static constexpr float phiLSB_ = M_PI / 720;
-  static constexpr float maxPt_ = ((1 << pt_t::width) - 1) * ptLSB_;
 
   void CalcJUMP_HLS(const l1t::EtSum& metVector,
                     const std::vector<l1ct::Jet>& jets,
