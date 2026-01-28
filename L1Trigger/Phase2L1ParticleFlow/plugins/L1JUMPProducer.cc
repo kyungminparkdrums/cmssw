@@ -2,8 +2,6 @@
 #include <string>
 #include <ap_int.h>
 #include <ap_fixed.h>
-#include <TVector2.h>
-#include <iostream>
 
 #include "FWCore/Framework/interface/global/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
