@@ -33,6 +33,7 @@ class L1JUMPProducer : public edm::global::EDProducer<> {
 public:
   explicit L1JUMPProducer(const edm::ParameterSet&);
   ~L1JUMPProducer() override;
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 private:
   void produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const override;
@@ -48,7 +49,7 @@ private:
                     const std::vector<l1ct::Jet>& jets,
                     reco::Candidate::PolarLorentzVector& JUMPVector) const;
 
-  std::vector<l1ct::Jet> convertEDMToHW(const std::vector<l1t::PFJet> edmJets) const;
+  std::vector<l1ct::Jet> convertEDMToHW(const std::vector<l1t::PFJet>& edmJets) const;
 
   double minJetPt;
   double maxJetEta;
@@ -63,6 +64,16 @@ L1JUMPProducer::L1JUMPProducer(const edm::ParameterSet& cfg)
       jerFilePath_(cfg.getParameter<std::string>("JERFile")) {
   produces<std::vector<l1t::EtSum>>();
   L1JUMPEmu::SetJERFile(jerFilePath_);
+}
+
+void L1JUMPProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.add<edm::InputTag>("RawMET", edm::InputTag("l1tMETPFProducer"));
+  desc.add<edm::InputTag>("L1PFJets", edm::InputTag("l1tSC4PFL1PuppiCorrectedEmulator"));
+  desc.add<double>("MinJetpT", 30);
+  desc.add<double>("MaxJetEta", 3.0);
+  desc.add<std::string>("JERFile", "L1Trigger/Phase2L1ParticleFlow/data/met/l1jump_jer_v1.json");
+  descriptions.add("L1JUMPProducer", desc);
 }
 
 void L1JUMPProducer::produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const {
