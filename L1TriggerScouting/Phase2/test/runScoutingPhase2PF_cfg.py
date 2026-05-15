@@ -4,30 +4,88 @@ import os
 
 from L1TriggerScouting.Phase2.options_cff import options, VarParsing
 options.register ('njets',
-                  16, 
+                  16,
                   VarParsing.VarParsing.multiplicity.singleton,
-                  VarParsing.VarParsing.varType.int,         
-                  'Number of jet seeds to reconstruct with SeededCone'
+                  VarParsing.VarParsing.varType.int,
+                  'Number of jets to reconstruct with SCGreedy (iterative seeded cone)'
 )
 options.register ('minSeedPt',
-                  0.0, 
+                  0.0,
                   VarParsing.VarParsing.multiplicity.singleton,
                   VarParsing.VarParsing.varType.float,
-                  'Minimum pt cut for seeded-cone jet seeds')
+                  'Minimum pt cut for seed candidates (used by SCNMSWeightedMultiIter / LinkTree)'
+)
 options.register ('jetR',
-                  0.4, 
+                  0.4,
                   VarParsing.VarParsing.multiplicity.singleton,
                   VarParsing.VarParsing.varType.float,
-                  'Jet radius')
+                  'Legacy single-radius parameter used by auto / SCGreedy fallback / demo modules'
+)
 options.register ('dumpClusters',
-                  False, 
+                  False,
                   VarParsing.VarParsing.multiplicity.singleton,
-                  VarParsing.VarParsing.varType.bool,         
+                  VarParsing.VarParsing.varType.bool,
                   'Dump clusters to options.outFile')
 
+
+# Additional algorithms
+# canonical names:
+#   SCGreedy                = iterative greedy seeded cone
+#   SCNMS                   = old non-iterative seeded cone with split radii:
+#                             RSeed for seed finding + old centroid accumulation,
+#                             RClu for final nearest-axis assignment
+#   SCNMSWeighted           = same old non-iterative seeded cone logic, but final
+#                             assignment uses old weighted metric
+#   SCNMSWeightedMultiIter  = newer weighted NMS-style seeded cone with explicit
+#                             centroid iterations and separate RCen
+#   LinkTree                = link-based clustering
+#
+# backward-compatible aliases kept:
+#   iterative               -> SCGreedy
+#   seededCone              -> SCNMS
+#   seededConeNMSWeighted   -> SCNMSWeighted
+#   linkTree                -> LinkTree
+options.register('jetAlgo',
+                 'SCGreedy',
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.string,
+                 'Jet algorithm: SCGreedy | SCNMS | SCNMSWeighted | SCNMSWeightedMultiIter | LinkTree')
+options.register('RSeed',
+                 0.3,
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.float,
+                 'Seed-finding radius; for SCNMS/SCNMSWeighted also used for old centroid accumulation')
+options.register('RCen',
+                 0.4,
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.float,
+                 'Centroid radius (used only by SCNMSWeightedMultiIter)')
+options.register('RClu',
+                 0.4,
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.float,
+                 'Final particle-assignment radius for SCNMS / SCNMSWeighted / SCNMSWeightedMultiIter')
+options.register('RLink',
+                 0.3,
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.float,
+                 'Link radius for LinkTree')
+options.register('alphaSeed',
+                 2.0,
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.float,
+                 'alpha in score = dr2 / pt_seed^alpha (used by SCNMSWeightedMultiIter)')
+options.register('nCentroidIters',
+                 1,
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.int,
+                 'Number of centroid iterations for SCNMSWeightedMultiIter: 0=use seed axis, >0 refine axis')
+
 options.parseArguments()
+
 if options.buNumStreams == []:
     options.buNumStreams.append(1)
+
 analyses = options.analyses if options.analyses else ["w3pi", "hphijpsi", "h2rho", "h2phi"]
 print(f"Analyses set to {analyses}")
 
@@ -35,6 +93,7 @@ if options.run not in ("unpack", "ak4", "sc4", "unpackAlpaka", "clueAlpaka", "sc
     raise RuntimeError("Unsupported run mode %r" % options.run)
 
 process = cms.Process("SCPU")
+
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(options.maxEvents)
 )
@@ -52,7 +111,7 @@ if len(options.buNumStreams) != len(options.buBaseDir):
     raise RuntimeError("Mismatch between buNumStreams (%d) and buBaseDirs (%d)" % (len(options.buNumStreams), len(options.buBaseDir)))
 
 if options.pfBarrelStreamIDs == [] and options.pfEndcapStreamIDs == []:
-    pfStreamIDs = list(range(sum(options.buNumStreams))) # take all 
+    pfStreamIDs = list(range(sum(options.buNumStreams))) # take all
 else:
     pfStreamIDs = options.pfBarrelStreamIDs + options.pfEndcapStreamIDs
 
@@ -68,6 +127,7 @@ process.EvFDaqDirector = cms.Service("EvFDaqDirector",
     buBaseDirsNumStreams = cms.untracked.vint32(*options.buNumStreams),
     directorIsBU = cms.untracked.bool(False),
 )
+
 process.FastMonitoringService = cms.Service("FastMonitoringService")
 
 process.load( "HLTrigger.Timer.FastTimerService_cfi" )
@@ -95,9 +155,11 @@ process.source = cms.Source("DAQSource",
         buDirs[0] + "/" + "run%06d_ls%04d_index%06d_stream00.raw" % (options.runNumber, options.lumiNumber, 1),
     )
 )
+
 os.system("touch " + buDirs[0] + "/" + "fu.lock")
 
 process.load("L1TriggerScouting.Phase2.unpackers_cff")
+
 if "alpaka" in options.run.lower():
   process.load("Configuration.StandardSequences.Accelerators_cff")
 
@@ -106,6 +168,7 @@ process.scPhase2PFRawToDigiStruct = process.scPhase2PuppiRawToDigiStruct.clone(
   fedIDs = [*pfStreamIDs],
   splitFactor = cms.uint32(len(pfStreamIDs) // options.timeslices)
 )
+
 process.goodOrbitsByNBX.nbxMin = 3564 * options.timeslices // options.tmuxPeriod
 process.goodOrbitsByNBX.unpackers = [ "scPhase2PFRawToDigiStruct" ]
 
@@ -148,11 +211,39 @@ if "alpaka" in options.run.lower():
       run_scout = cms.bool(True),
   )
 
+  sc4Alpaka_kwargs = {
+      "alpaka": cms.untracked.PSet( backend = cms.untracked.string(options.backend) ),
+      "src": cms.InputTag("scPhase2PFRawToDigiAlpaka"),
+      "algo": cms.string(options.jetAlgo)
+  }
+
+  if options.jetAlgo == "SCGreedy":
+      sc4Alpaka_kwargs.update({
+          "rParam": cms.double(options.jetR),
+          "nJets": cms.uint32(options.njets),
+      })
+  elif options.jetAlgo == "SCNMS" or options.jetAlgo == "SCNMSWeighted":
+      sc4Alpaka_kwargs.update({
+          "RSeed": cms.double(options.RSeed),
+          "RClu": cms.double(options.RClu),
+      })
+  elif options.jetAlgo == "SCNMSWeightedMultiIter":
+      sc4Alpaka_kwargs.update({
+          "RSeed": cms.double(options.RSeed),
+          "RCen": cms.double(options.RCen),
+          "RClu": cms.double(options.RClu),
+          "alphaSeed": cms.double(options.alphaSeed),
+          "minSeedPt": cms.double(options.minSeedPt),
+          "nCentroidIters": cms.uint32(options.nCentroidIters),
+      })
+  elif options.jetAlgo == "LinkTree":
+      sc4Alpaka_kwargs.update({
+          "RLink": cms.double(options.RLink),
+          "minSeedPt": cms.double(options.minSeedPt),
+      })
+
   process.scPhase2SC4PFAlpaka = l1sc_L1TScPhase2SCJets_alpaka(
-      alpaka = cms.untracked.PSet( backend = cms.untracked.string(options.backend) ),
-      src = cms.InputTag("scPhase2PFRawToDigiAlpaka"),
-      rParam = cms.double(options.jetR),
-      nJets = cms.uint32(options.njets),
+      **sc4Alpaka_kwargs
   )
 
   process.SoftTauIdSC4 = l1sc_SoftTauIdML_alpaka(
@@ -184,7 +275,7 @@ if "alpaka" in options.run.lower():
     process.scPhase2PFRawToDigiAlpaka +
     process.goodOrbitsByNBX +
     process.scPhase2SC4PFAlpaka +
-    process.SoftTauIdSC4 
+    process.SoftTauIdSC4
   )
 
 
@@ -203,7 +294,7 @@ process.p_sc4 = cms.Path(
   process.scPhase2SC4PFDemo
 )
 
-if options.run not in ("both","inclusive","selected"): 
+if options.run not in ("both","inclusive","selected"):
   sched = [ getattr(process, "p_" + options.run)]
   if options.dumpClusters:
     process.scPhase2PFStructToTable = cms.EDProducer("ScPuppiToOrbitFlatTable",
@@ -219,10 +310,11 @@ if options.run not in ("both","inclusive","selected"):
     process.out = cms.OutputModule("OrbitNanoAODOutputModule",
      fileName = cms.untracked.string(options.outFile),
      SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring()),
-     outputCommands = cms.untracked.vstring("drop *", 
+     outputCommands = cms.untracked.vstring("drop *",
        "keep l1ScoutingRun3OrbitFlatTable_*_*_*")
     )
     process.p_out = cms.EndPath(process.out)
+
     if options.run in ("sc4Alpaka",):
       process.dumpClusters = cms.EDProducer("ClusterSoAToOrbitFlatTable",
           srcBx = cms.InputTag("scPhase2PFRawToDigiAlpaka"),
@@ -238,6 +330,7 @@ if options.run not in ("both","inclusive","selected"):
       )
       process.p_dump = cms.Path(process.dumpClusters + process.dumpJets)
       sched.append(process.p_dump)
+
     if options.run in ("clueAlpaka",):
       process.dumpClusters = cms.EDProducer("ClusterSoAToOrbitFlatTable",
           srcBx = cms.InputTag("scPhase2PFRawToDigiAlpaka"),
@@ -245,14 +338,9 @@ if options.run not in ("both","inclusive","selected"):
           name = cms.string("ClueClusters"),
           doc = cms.string("")
       )
-      #process.dumpJets = cms.EDProducer("ClusterObjSoAToOrbitFlatTable",
-      #    srcBx = cms.InputTag("scPhase2PFRawToDigiAlpaka"),
-      #    srcClusters = cms.InputTag("scPhase2SC4PFAlpaka"),
-      #    name = cms.string("SC4AlpakaJets"),
-      #    doc = cms.string(""),
-      #)
       process.p_dump = cms.Path(process.dumpClusters)
-      sched.append(process.p_dump)      
+      sched.append(process.p_dump)
+
     sched.append(process.p_out)
 else:
   sched = [ process.p_inclusive, process.p_selected ]
