@@ -1328,6 +1328,10 @@ std::unique_ptr<l1t::PFCandidateCollection> L1TCorrelatorLayer1Producer::fetchPF
       ret->back().setCaloEta(reg.floatGlbEtaOf(p));
       ret->back().setCaloPhi(reg.floatGlbPhiOf(p));
 
+      ret->back().setIdProbPu(p.idProbPu);
+      ret->back().setIdProbEm(p.idProbEm);
+      ret->back().setIdProbPi(p.idProbPi);
+
       // encode the PF candidate with the 64b encoding used for PUPPI
       l1ct::PuppiObj encodedPF;
       encodedPF.fill(reg, p);
@@ -1345,6 +1349,10 @@ std::unique_ptr<l1t::PFCandidateCollection> L1TCorrelatorLayer1Producer::fetchPF
       ret->back().setHwEmID(p.hwEmID);
       ret->back().setCaloEta(reg.floatGlbEtaOf(p));
       ret->back().setCaloPhi(reg.floatGlbPhiOf(p));
+
+      ret->back().setIdProbPu(p.idProbPu);
+      ret->back().setIdProbEm(p.idProbEm);
+      ret->back().setIdProbPi(p.idProbPi);
 
       // encode the PF candidate with the 64b encoding used for PUPPI
       l1ct::PuppiObj encodedPF;
@@ -1395,6 +1403,10 @@ void L1TCorrelatorLayer1Producer::putPuppi(edm::Event &iEvent) const {
         coll->back().setHwPuppiWeight(p.hwPuppiW());
         coll->back().setHwEmID(p.hwEmID());
       }
+      coll->back().setIdProbPu(-1);
+      coll->back().setIdProbEm(-1);
+      coll->back().setIdProbPi(-1);
+
       coll->back().setEncodedPuppi64(p.pack().to_uint64());
       setRefs_(coll->back(), p);
       nobj.push_back(coll->size() - 1);

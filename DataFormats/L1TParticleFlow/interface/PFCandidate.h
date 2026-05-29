@@ -69,6 +69,13 @@ namespace l1t {
     void setHwEmID(uint16_t hwEmID) { hwEmID_ = hwEmID; }
     void setEncodedPuppi64(uint64_t encodedPuppi64) { encodedPuppi64_ = encodedPuppi64; }
 
+    float idProbPu() const { return idProbPu_; }
+    void setIdProbPu(float prob) { idProbPu_ = prob; }
+    float idProbEm() const { return idProbEm_; }
+    void setIdProbEm(float prob) { idProbEm_ = prob; }
+    float idProbPi() const { return idProbPi_; }
+    void setIdProbPi(float prob) { idProbPi_ = prob; }
+
   private:
     L1CandPtr caloPtr_;
     PFTrackRef trackRef_;
@@ -78,6 +85,10 @@ namespace l1t {
     int16_t hwZ0_, hwDxy_;
     uint16_t hwTkQuality_, hwPuppiWeight_, hwEmID_;
     uint64_t encodedPuppi64_;
+
+    float idProbPu_;
+    float idProbEm_;
+    float idProbPi_;
 
     void setPdgIdFromParticleType(int charge, ParticleType kind);
   };

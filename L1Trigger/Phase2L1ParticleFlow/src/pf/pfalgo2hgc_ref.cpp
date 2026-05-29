@@ -238,8 +238,13 @@ void l1ct::PFAlgo2HGCEmulator::run(const PFInputRegion& in, OutputRegion& out) c
     if (in.track[it].hwPt > 0 && track_good[it]) {
       fillPFCand(in.track[it], out.pfcharged[it], /*isMu=*/(iMu[it] != -1), isEle[it]);
       // extra emulator information
-      if (tk2calo[it] != -1)
+      if (tk2calo[it] != -1) {
         out.pfcharged[it].srcCluster = in.hadcalo[tk2calo[it]].src;
+      
+        out.pfcharged[it].idProbPu = in.hadcalo[tk2calo[it]].hwPuProb().to_float();
+        out.pfcharged[it].idProbPi = in.hadcalo[tk2calo[it]].hwPiProb.to_float();
+        out.pfcharged[it].idProbEm = in.hadcalo[tk2calo[it]].hwEmProb.to_float();
+      }
       if (iMu[it] != -1)
         out.pfcharged[it].srcMu = in.muon[iMu[it]].src;
     }
@@ -254,6 +259,10 @@ void l1ct::PFAlgo2HGCEmulator::run(const PFInputRegion& in, OutputRegion& out) c
       fillPFCand(in.hadcalo[ic], outne_all[ic], in.hadcalo[ic].hwIsEM());
       outne_all[ic].hwPt = calo_subpt[ic];
       outne_all[ic].hwEmPt = in.hadcalo[ic].hwIsEM() ? calo_subpt[ic] : pt_t(0);  // FIXME
+
+      outne_all[ic].idProbPu = in.hadcalo[ic].hwPuProb().to_float();
+      outne_all[ic].idProbEm = in.hadcalo[ic].hwEmProb.to_float();
+      outne_all[ic].idProbPi = in.hadcalo[ic].hwPiProb.to_float();
     }
   }
 
