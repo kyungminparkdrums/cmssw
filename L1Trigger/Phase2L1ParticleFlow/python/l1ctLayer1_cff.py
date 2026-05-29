@@ -192,7 +192,7 @@ l1tLayer1HGCal = cms.EDProducer("L1TCorrelatorLayer1Producer",
             wps = cms.VPSet(
                 cms.PSet(
                     wp_pt = cms.vdouble(20),
-                    wp_PU = cms.vdouble(0.33462133, 0.25283374),
+                    wp_PU = cms.vdouble(0.33, 0.33),
                     wp_Pi = cms.vdouble(0.26773010, 0.03898286),
                     wp_PFEm = cms.vdouble(0.29812516, 0.42790125),
                     wp_EgEm = cms.vdouble(0.29812516, 0.42790125),
@@ -341,7 +341,7 @@ l1tLayer1HGCalNoTK = cms.EDProducer("L1TCorrelatorLayer1Producer",
             wps = cms.VPSet(
                 cms.PSet(
                     wp_pt = cms.vdouble(20),
-                    wp_PU = cms.vdouble(0.33462133, 0.25283374),
+                    wp_PU = cms.vdouble(0.33, 0.33),
                     wp_Pi = cms.vdouble(0.26773010, 0.03898286),
                     wp_PFEm = cms.vdouble(0.29812516, 0.42790125),
                     wp_EgEm = cms.vdouble(0.29812516, 0.42790125),

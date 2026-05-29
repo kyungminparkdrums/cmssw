@@ -258,7 +258,8 @@ bool l1ct::HgcalClusterDecoderEmulator::MultiClassID::evaluate(const l1ct::PFReg
   }
   bool passPu = (sm_scores[0] >= wps.wp_PU[pt_bin]);
   // bool passPi = (sm_scores[1] >= wp_Pi_[pt_bin]);  // FIXME: where do we store this?
-  bool passPFEm = (sm_scores[2] >= wps.wp_PFEm[pt_bin]);
+  //bool passPFEm = (sm_scores[2] >= wps.wp_PFEm[pt_bin]);
+  bool passPFEm = (sm_scores[2] >= sm_scores[1]); // argmax approach of EM vs. Pion for PF
   bool passEgEm = (sm_scores[2] >= wps.wp_EgEm[pt_bin]);
   bool passEgEm_tight = (sm_scores[2] >= wps.wp_EgEm_tight[pt_bin]);
 
