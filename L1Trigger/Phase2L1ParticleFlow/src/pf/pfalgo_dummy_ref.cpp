@@ -65,6 +65,10 @@ void l1ct::PFAlgoDummyEmulator::run(const PFInputRegion& in, OutputRegion& out) 
   for (unsigned int ic = 0; ic < nCALO; ++ic) {
     if (in.hadcalo[ic].hwPt > 0) {
       fillPFCand(in.hadcalo[ic], out.pfneutral[ic], in.hadcalo[ic].hwIsEM());
+      out.pfneutral[ic].idProbPu = in.hadcalo[ic].hwPuProb().to_float();
+      out.pfneutral[ic].idProbEm = in.hadcalo[ic].hwEmProb.to_float();
+      out.pfneutral[ic].idProbPi = in.hadcalo[ic].hwPiProb.to_float();
+
     } else {
       out.pfneutral[ic].clear();
     }
