@@ -253,6 +253,7 @@ float ScPhase2TkEmDarkPhotonDiEle::pairmass(const std::array<unsigned int, 2> &t
 void ScPhase2TkEmDarkPhotonDiEle::fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("src");
+  desc.add<edm::InputTag>("srcPF");
   desc.add<std::vector<double>>("ptMin", {5.0, 4.0});
   desc.add<std::vector<double>>("idScore", {0.0, 0.0});
   desc.add<double>("etaMax", 1.479);
