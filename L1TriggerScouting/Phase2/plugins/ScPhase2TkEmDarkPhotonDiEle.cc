@@ -30,14 +30,16 @@ private:
   void beginStream(edm::StreamID) override;
   void produce(edm::Event &, const edm::EventSetup &) override;
   void endStream() override;
-  template <typename T>
+  template <typename T, typename U>
   void runObj(const OrbitCollection<T> &src,
+              const OrbitCollection<U> &src2,
               edm::Event &out,
               unsigned long &nTry,
               unsigned long &nPass,
               const std::string &bxLabel);
 
   edm::EDGetTokenT<OrbitCollection<l1Scouting::TkEle>> structTkEleToken_;
+  edm::EDGetTokenT<OrbitCollection<l1Scouting::Puppi>> structPFToken_;
 
   struct Cuts {
     std::array<float, 2> minpt;
@@ -56,6 +58,7 @@ private:
 
 ScPhase2TkEmDarkPhotonDiEle::ScPhase2TkEmDarkPhotonDiEle(const edm::ParameterSet &iConfig) {
   structTkEleToken_ = consumes<OrbitCollection<l1Scouting::TkEle>>(iConfig.getParameter<edm::InputTag>("src"));
+  structPFToken_ = consumes<OrbitCollection<l1Scouting::Puppi>>(iConfig.getParameter<edm::InputTag>("srcPF"));
   produces<std::vector<unsigned>>("selectedBx");
   produces<l1ScoutingRun3::OrbitFlatTable>("zdee");
   auto minPts = iConfig.getParameter<std::vector<double>>("ptMin");
@@ -86,15 +89,19 @@ void ScPhase2TkEmDarkPhotonDiEle::produce(edm::Event &iEvent, const edm::EventSe
   edm::Handle<OrbitCollection<l1Scouting::TkEle>> srcTkEle;
   iEvent.getByToken(structTkEleToken_, srcTkEle);
 
-  runObj(*srcTkEle, iEvent, countStruct_, passStruct_, "");
+  edm::Handle<OrbitCollection<l1Scouting::Puppi>> srcPf;
+  iEvent.getByToken(structPFToken_, srcPf);
+
+  runObj(*srcTkEle, *srcPf, iEvent, countStruct_, passStruct_, "");
 }
 
 void ScPhase2TkEmDarkPhotonDiEle::endStream() {
   edm::LogImportant("ScPhase2AnalysisSummary") << "zdee Struct analysis: " << countStruct_ << " -> " << passStruct_;
 }
 
-template <typename T>
+template <typename T, typename U>
 void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
+                                         const OrbitCollection<U> &srcPf,
                                          edm::Event &iEvent,
                                          unsigned long &nTry,
                                          unsigned long &nPass,
@@ -115,6 +122,41 @@ void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
     auto range = srcTkEle.bxIterator(bx);
     const T *cands = &range.front();
     auto size = range.size();
+
+    auto pfRange = srcPf.bxIterator(bx);
+    const U *pfs = pfRange.empty() ? nullptr : &pfRange.front();
+    auto nPf = pfRange.size();
+
+    auto deltaPhi = [](float phi1, float phi2) {
+      float dphi = std::abs(phi1 - phi2);
+      return dphi > M_PI ? 2.0 * M_PI - dphi : dphi;
+    };
+
+    auto customPfRelIso = [&](const T &ele) {
+      float sumPt = 0.0;
+
+      for (unsigned int iPf = 0; iPf < nPf; ++iPf) {
+        if (pfs[iPf].charge() == 0)
+          continue;
+
+        float deta = ele.eta() - pfs[iPf].eta();
+        float dphi = deltaPhi(ele.phi(), pfs[iPf].phi());
+        float dR = std::sqrt(deta * deta + dphi * dphi);
+
+        if (dR >= 0.3)
+          continue;
+
+        if (dR < 0.05)
+          continue;
+
+        if (std::abs(pfs[iPf].z0() - ele.z0()) > 0.5)
+          continue;
+
+        sumPt += pfs[iPf].pt();
+      }
+
+      return sumPt / ele.pt();
+    };
 
     // Select events with two or more electrons with pT > 5 GeV and in barrel
     iEle.clear();
@@ -139,7 +181,10 @@ void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
       if (cands[iEle[i1]].idScore() < cuts.minid[0])
         continue;
 
-      if (cands[iEle[i1]].isolation() > cands[iEle[i1]].pt() * cuts.maxRelIso)
+      //if (cands[iEle[i1]].isolation() > cands[iEle[i1]].pt() * cuts.maxRelIso)
+      //  continue;
+
+      if (customPfRelIso(cands[iEle[i1]]) > cuts.maxRelIso)
         continue;
 
       for (unsigned int i2 = i1 + 1; i2 < nEle; ++i2) {
@@ -149,7 +194,9 @@ void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
           continue;
 
         // isolation cut
-        if (cands[iEle[i2]].isolation() > cands[iEle[i2]].pt() * cuts.maxRelIso)
+        //if (cands[iEle[i2]].isolation() > cands[iEle[i2]].pt() * cuts.maxRelIso)
+        //  continue;
+        if (customPfRelIso(cands[iEle[i1]]) > cuts.maxRelIso)
           continue;
 
         // OS requirement
@@ -157,6 +204,7 @@ void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
           continue;
 
         // dz requirement
+        //float pairDZ = std::abs(cands[iEle[i1]].z0() - cands[iEle[i2]].z0());
         float pairDZ = std::abs(cands[iEle[i1]].z0() - cands[iEle[i2]].z0());
         if (pairDZ >= cuts.maxdz)
           continue;
