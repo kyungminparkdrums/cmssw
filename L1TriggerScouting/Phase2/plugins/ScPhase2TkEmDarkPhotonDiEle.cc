@@ -89,10 +89,10 @@ void ScPhase2TkEmDarkPhotonDiEle::produce(edm::Event &iEvent, const edm::EventSe
   edm::Handle<OrbitCollection<l1Scouting::TkEle>> srcTkEle;
   iEvent.getByToken(structTkEleToken_, srcTkEle);
 
-  edm::Handle<OrbitCollection<l1Scouting::Puppi>> srcPf;
-  iEvent.getByToken(structPFToken_, srcPf);
+  edm::Handle<OrbitCollection<l1Scouting::Puppi>> srcPF;
+  iEvent.getByToken(structPFToken_, srcPF);
 
-  runObj(*srcTkEle, *srcPf, iEvent, countStruct_, passStruct_, "");
+  runObj(*srcTkEle, *srcPF, iEvent, countStruct_, passStruct_, "");
 }
 
 void ScPhase2TkEmDarkPhotonDiEle::endStream() {
@@ -101,7 +101,7 @@ void ScPhase2TkEmDarkPhotonDiEle::endStream() {
 
 template <typename T, typename U>
 void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
-                                         const OrbitCollection<U> &srcPf,
+                                         const OrbitCollection<U> &srcPF,
                                          edm::Event &iEvent,
                                          unsigned long &nTry,
                                          unsigned long &nPass,
@@ -123,7 +123,7 @@ void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
     const T *cands = &range.front();
     auto size = range.size();
 
-    auto pfRange = srcPf.bxIterator(bx);
+    auto pfRange = srcPF.bxIterator(bx);
     const U *pfs = pfRange.empty() ? nullptr : &pfRange.front();
     auto nPf = pfRange.size();
 
