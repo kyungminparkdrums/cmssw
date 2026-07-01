@@ -19,9 +19,9 @@ zdeeStruct = cms.EDProducer("ScPhase2TkEmDarkPhotonDiEle",
     src = cms.InputTag("scPhase2TkEmRawToDigiStruct"),
     srcPF = cms.InputTag("scPhase2PuppiRawToDigiStruct"),
     ptMin = cms.vdouble(5.0, 4.0),
-    idScore = cms.vdouble(0.5, 0.5),  # in GT format, i.e. range is [0, 1] and not [-1, 1]
+    idScore = cms.vdouble(0.5, 0.5),  # (0,0) in GT format, i.e. range is [0, 1] and not [-1, 1]
     etaMax = cms.double(1.479),
-    dzMax = cms.double(1.0),
-    relIso = cms.double(0.4),
+    dzMax = cms.double(0.5),
+    relIso = cms.double(0.2),
 )
 
