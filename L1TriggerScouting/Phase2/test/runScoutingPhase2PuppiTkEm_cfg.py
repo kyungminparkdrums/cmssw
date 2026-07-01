@@ -97,14 +97,13 @@ process.load("L1TriggerScouting.Phase2.maskedCollections_cff")
 process.load("L1TriggerScouting.Phase2.nanoAODOutputs_cff")
 
 ## Configure unpackers
-process.scPhase2PfRawToDigiStruct = process.scPhase2PuppiRawToDigiStruct.clone()
-process.scPhase2PfRawToDigiStruct.fedIDs = [*pfStreamIDs]
+process.scPhase2PFRawToDigiStruct.fedIDs = [*pfStreamIDs]
 
 process.scPhase2PuppiRawToDigiStruct.fedIDs = [*puppiStreamIDs]
 process.scPhase2TkEmRawToDigiStruct.fedIDs = [*tkEmStreamIDs]
 process.goodOrbitsByNBX.nbxMin = 3564 * options.timeslices // options.tmuxPeriod
 #process.goodOrbitsByNBX.unpackers = [ "scPhase2PuppiRawToDigiStruct", "scPhase2TkEmRawToDigiStruct"]
-process.goodOrbitsByNBX.unpackers = [ "scPhase2PfRawToDigiStruct", "scPhase2PuppiRawToDigiStruct", "scPhase2TkEmRawToDigiStruct"]
+process.goodOrbitsByNBX.unpackers = [ "scPhase2PFRawToDigiStruct", "scPhase2PuppiRawToDigiStruct", "scPhase2TkEmRawToDigiStruct"]
 
 ## Configure analyses
 analysisModules = [getattr(process,f"{a}Struct") for a in analyses]
