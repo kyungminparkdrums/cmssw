@@ -30,6 +30,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 100
 if len(options.buNumStreams) != len(options.buBaseDir):
     raise RuntimeError("Mismatch between buNumStreams (%d) and buBaseDirs (%d)" % (len(options.buNumStreams), len(options.buBaseDir)))
 
+"""
 if options.puppiStreamIDs == [] and options.tkEmStreamIDs ==  []:
     nStreamsTot = sum(options.buNumStreams)
     puppiStreamIDs = list(range(nStreamsTot//2)) # take first half
@@ -37,6 +38,10 @@ if options.puppiStreamIDs == [] and options.tkEmStreamIDs ==  []:
 else:
     puppiStreamIDs = options.puppiStreamIDs
     tkEmStreamIDs = options.tkEmStreamIDs
+"""
+pfStreamIDs = [0]
+puppiStreamIDs = [1]
+tkEmStreamIDs = [2]
 
 process.EvFDaqDirector = cms.Service("EvFDaqDirector",
     useFileBroker = cms.untracked.bool(options.broker != "none"),
@@ -96,10 +101,14 @@ process.load("L1TriggerScouting.Phase2.maskedCollections_cff")
 process.load("L1TriggerScouting.Phase2.nanoAODOutputs_cff")
 
 ## Configure unpackers
+process.scPhase2PfRawToDigiStruct = process.scPhase2PuppiRawToDigiStruct.clone()
+process.scPhase2PfRawToDigiStruct.fedIDs = [*pfStreamIDs]
+
 process.scPhase2PuppiRawToDigiStruct.fedIDs = [*puppiStreamIDs]
 process.scPhase2TkEmRawToDigiStruct.fedIDs = [*tkEmStreamIDs]
 process.goodOrbitsByNBX.nbxMin = 3564 * options.timeslices // options.tmuxPeriod
-process.goodOrbitsByNBX.unpackers = [ "scPhase2PuppiRawToDigiStruct", "scPhase2TkEmRawToDigiStruct"]
+#process.goodOrbitsByNBX.unpackers = [ "scPhase2PuppiRawToDigiStruct", "scPhase2TkEmRawToDigiStruct"]
+process.goodOrbitsByNBX.unpackers = [ "scPhase2PfRawToDigiStruct", "scPhase2PuppiRawToDigiStruct", "scPhase2TkEmRawToDigiStruct"]
 
 ## Configure analyses
 analysisModules = [getattr(process,f"{a}Struct") for a in analyses]
