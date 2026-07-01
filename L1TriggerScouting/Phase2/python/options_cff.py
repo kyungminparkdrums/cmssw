@@ -49,6 +49,13 @@ options.register ('tmuxPeriod',
                   VarParsing.VarParsing.varType.int,          # string, int, or float
                   "Time multiplex period")
 
+options.register ('pfStreamIDs',
+                  [], # default value
+                  VarParsing.VarParsing.multiplicity.list,
+                  VarParsing.VarParsing.varType.int,          # string, int, or float
+                  "Stream IDs for the Pf inputs")
+
+
 options.register ('puppiStreamIDs',
                   [], # default value
                   VarParsing.VarParsing.multiplicity.list,

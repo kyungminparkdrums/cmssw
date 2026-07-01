@@ -30,18 +30,14 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 100
 if len(options.buNumStreams) != len(options.buBaseDir):
     raise RuntimeError("Mismatch between buNumStreams (%d) and buBaseDirs (%d)" % (len(options.buNumStreams), len(options.buBaseDir)))
 
-"""
 if options.puppiStreamIDs == [] and options.tkEmStreamIDs ==  []:
     nStreamsTot = sum(options.buNumStreams)
     puppiStreamIDs = list(range(nStreamsTot//2)) # take first half
     tkEmStreamIDs = list(range(nStreamsTot//2, nStreamsTot)) # take second half
 else:
     puppiStreamIDs = options.puppiStreamIDs
+    pfStreamIDs = options.pfStreamIDs
     tkEmStreamIDs = options.tkEmStreamIDs
-"""
-pfStreamIDs = [0]
-puppiStreamIDs = [1]
-tkEmStreamIDs = [2]
 
 process.EvFDaqDirector = cms.Service("EvFDaqDirector",
     useFileBroker = cms.untracked.bool(options.broker != "none"),
