@@ -162,6 +162,7 @@ void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
     iEle.clear();
     for (unsigned int i = 0; i < size; ++i) {  //make list of all electrons
       if ((cands[i].pt() >= cuts.minpt[1]) && (std::abs(cands[i].eta()) <= cuts.maxeta) &&
+          //std::cout << "cands[i].idScore() = " << cands[i].idScore() << std::endl;
           (cands[i].idScore() >= std::min(cuts.minid[0], cuts.minid[1]))) {
         iEle.push_back(i);
       }
