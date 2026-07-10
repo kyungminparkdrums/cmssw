@@ -100,144 +100,194 @@ void ScPhase2TkEmDarkPhotonDiEle::endStream() {
 }
 
 template <typename T, typename U>
-void ScPhase2TkEmDarkPhotonDiEle::runObj(const OrbitCollection<T> &srcTkEle,
-                                         const OrbitCollection<U> &srcPF,
-                                         edm::Event &iEvent,
-                                         unsigned long &nTry,
-                                         unsigned long &nPass,
-                                         const std::string &label) {
+void ScPhase2TkEmDarkPhotonDiEle::runObj(
+    const OrbitCollection<T> &srcTkEle,
+    const OrbitCollection<U> &srcPF,
+    edm::Event &iEvent,
+    unsigned long &nTry,
+    unsigned long &nPass,
+    const std::string &label) {
   l1ScoutingRun3::BxOffsetsFillter bxOffsetsFiller;
   bxOffsetsFiller.start();
+
   auto ret = std::make_unique<std::vector<unsigned>>();
-
   std::vector<float> masses;
-  ROOT::RVec<unsigned int> iEle;
-  std::array<unsigned int, 2> bestPair{{0, 0}};
 
-  bool bestPairFound;
-  float minDZ;
+  constexpr float isoCone2 = 0.3f * 0.3f;
+  constexpr float vetoCone2 = 0.05f * 0.05f;
+  constexpr float isoDzMax = 0.5f;
+  constexpr float pi = 3.14159265358979323846f;
+  constexpr float twoPi = 2.0f * pi;
 
   for (unsigned int bx = 1; bx <= OrbitCollection<T>::NBX; ++bx) {
-    nTry++;
+    ++nTry;
+
     auto range = srcTkEle.bxIterator(bx);
-    const T *cands = &range.front();
-    auto size = range.size();
+    const unsigned int size = range.size();
 
-    auto pfRange = srcPF.bxIterator(bx);
-    const U *pfs = pfRange.empty() ? nullptr : &pfRange.front();
-    auto nPf = pfRange.size();
-
-    auto deltaPhi = [](float phi1, float phi2) {
-      float dphi = std::abs(phi1 - phi2);
-      return dphi > M_PI ? 2.0 * M_PI - dphi : dphi;
-    };
-
-    auto customPfRelIso = [&](const T &ele) {
-      float sumPt = 0.0;
-
-      for (unsigned int iPf = 0; iPf < nPf; ++iPf) {
-        if (pfs[iPf].charge() == 0)
-          continue;
-
-        float deta = ele.eta() - pfs[iPf].eta();
-        float dphi = deltaPhi(ele.phi(), pfs[iPf].phi());
-        float dR = std::sqrt(deta * deta + dphi * dphi);
-
-        if (dR >= 0.3)
-          continue;
-
-        if (dR < 0.05)
-          continue;
-
-        if (std::abs(pfs[iPf].z0() - ele.z0()) > 0.5)
-          continue;
-
-        sumPt += pfs[iPf].pt();
-      }
-
-      return sumPt / ele.pt();
-    };
-
-    // Select events with two or more electrons with pT > 5 GeV and in barrel
-    iEle.clear();
-    for (unsigned int i = 0; i < size; ++i) {  //make list of all electrons
-      if ((cands[i].pt() >= cuts.minpt[1]) && (std::abs(cands[i].eta()) <= cuts.maxeta) &&
-          //std::cout << "cands[i].idScore() = " << cands[i].idScore() << std::endl;
-          (cands[i].idScore() >= std::min(cuts.minid[0], cuts.minid[1]))) {
-        iEle.push_back(i);
-      }
-    }
-
-    unsigned int nEle = iEle.size();
-    if (nEle < 2)
+    if (size < 2)
       continue;
 
-    // Loop over possible ee pairs; get the best pair
-    bestPairFound = false;
-    minDZ = cuts.maxdz;
-    for (unsigned int i1 = 0; i1 < nEle; ++i1) {
-      if (cands[iEle[i1]].pt() < cuts.minpt[0])
+    const T *cands = &range.front();
+
+    auto pfRange = srcPF.bxIterator(bx);
+    const unsigned int nPf = pfRange.size();
+    const U *pfs = pfRange.empty() ? nullptr : &pfRange.front();
+
+    /*
+     * Preselect electrons using:
+     *   - subleading pT threshold;
+     *   - barrel acceptance;
+     *   - ID threshold applied to both electrons (leading ID cut == subleading ID cut in the config)
+     */
+    std::vector<unsigned int> iEle;
+    iEle.reserve(size);
+
+    for (unsigned int i = 0; i < size; ++i) {
+      if (cands[i].pt() <= cuts.minpt[1])
         continue;
 
-      if (cands[iEle[i1]].idScore() < cuts.minid[0])
+      if (std::abs(cands[i].eta()) > cuts.maxeta)
         continue;
 
-      //if (cands[iEle[i1]].isolation() > cands[iEle[i1]].pt() * cuts.maxRelIso)
-      //  continue;
-
-      if (customPfRelIso(cands[iEle[i1]]) > cuts.maxRelIso)
+      if (cands[i].idScore() < cuts.minid[1])
         continue;
 
-      for (unsigned int i2 = i1 + 1; i2 < nEle; ++i2) {
-        // pt cut was already applied when filling iEle,
-        // but we need to apply id cuts
-        if ((cands[iEle[i2]].idScore() < cuts.minid[1]))
+      iEle.push_back(i);
+    }
+
+    if (iEle.size() < 2)
+      continue;
+
+    /*
+     * Sort electrons by descending pT. For each pair with i1 < i2,
+     * i1 is the leading leg and i2 is the subleading leg.
+     */
+    std::sort(
+        iEle.begin(),
+        iEle.end(),
+        [&](unsigned int lhs, unsigned int rhs) {
+          return cands[lhs].pt() > cands[rhs].pt();
+        });
+
+    /*
+     * Cache the relative isolation. Each electron scans the PF collection
+     * at most once per BX, even if it appears in multiple pairs.
+     */
+    std::vector<float> relIsoCache(size, -1.0f);
+
+    auto customPfRelIso = [&](unsigned int eleIndex) -> float {
+      float &cachedIso = relIsoCache[eleIndex];
+
+      if (cachedIso >= 0.0f)
+        return cachedIso;
+
+      const T &ele = cands[eleIndex];
+      float sumPt = 0.0f;
+
+      for (unsigned int iPf = 0; iPf < nPf; ++iPf) {
+        const U &pf = pfs[iPf];
+
+        if (pf.charge() == 0)
           continue;
 
-        // isolation cut
-        //if (cands[iEle[i2]].isolation() > cands[iEle[i2]].pt() * cuts.maxRelIso)
-        //  continue;
-        if (customPfRelIso(cands[iEle[i1]]) > cuts.maxRelIso)
+        if (std::abs(pf.z0() - ele.z0()) > isoDzMax)
           continue;
 
-        // OS requirement
-        if (!(cands[iEle[i1]].charge() * cands[iEle[i2]].charge() < 0))
+        const float deta = ele.eta() - pf.eta();
+
+        float dphi = std::abs(ele.phi() - pf.phi());
+        if (dphi > pi)
+          dphi = twoPi - dphi;
+
+        const float dR2 = deta * deta + dphi * dphi;
+
+        if (dR2 >= isoCone2)
           continue;
 
-        // dz requirement
-        //float pairDZ = std::abs(cands[iEle[i1]].z0() - cands[iEle[i2]].z0());
-        float pairDZ = std::abs(cands[iEle[i1]].z0() - cands[iEle[i2]].z0());
+        if (dR2 < vetoCone2)
+          continue;
+
+        sumPt += pf.pt();
+      }
+
+      cachedIso = sumPt / ele.pt();
+      return cachedIso;
+    };
+
+    bool bestPairFound = false;
+    float minDZ = cuts.maxdz;
+    std::array<unsigned int, 2> bestPair{{0, 0}};
+
+    /*
+     * Pair-selection order, after preselections above:
+     *   1. leading pT;
+     *   2. opposite sign;
+     *   3. isolation on both legs;
+     *   4. dz;
+     *   5. choose the valid pair with minimum dz.
+     */
+    for (unsigned int i1 = 0; i1 + 1 < iEle.size(); ++i1) {
+      const unsigned int leadingIndex = iEle[i1];
+      const T &leading = cands[leadingIndex];
+
+      /*
+       * Since the electrons are pT ordered, once this fails,
+       * no subsequent electron can be the leading leg.
+       */
+      if (leading.pt() <= cuts.minpt[0])
+        break;
+
+      for (unsigned int i2 = i1 + 1; i2 < iEle.size(); ++i2) {
+        const unsigned int subleadingIndex = iEle[i2];
+        const T &subleading = cands[subleadingIndex];
+
+        // Opposite-sign requirement.
+        if (leading.charge() * subleading.charge() >= 0)
+          continue;
+
+        // Isolation requirement on both legs.
+        if (customPfRelIso(leadingIndex) > cuts.maxRelIso)
+          continue;
+
+        if (customPfRelIso(subleadingIndex) > cuts.maxRelIso)
+          continue;
+
+        // Pair dz requirement.
+        const float pairDZ =
+            std::abs(leading.z0() - subleading.z0());
+
         if (pairDZ >= cuts.maxdz)
           continue;
 
-        if (pairDZ < minDZ) {
-          bestPair[0] = iEle[i1];
-          bestPair[1] = iEle[i2];
+        // All pair cuts passed: retain the pair with minimum dz.
+        if (!bestPairFound || pairDZ < minDZ) {
+          bestPair[0] = leadingIndex;
+          bestPair[1] = subleadingIndex;
           minDZ = pairDZ;
           bestPairFound = true;
         }
-        // Find the one with the max dPhi
       }
     }
+
     if (!bestPairFound)
       continue;
 
-    // Best ee pair mass
-    auto mass = pairmass(bestPair, cands);
-
+    masses.push_back(pairmass(bestPair, cands));
     ret->emplace_back(bx);
-    nPass++;
 
-    masses.push_back(mass);
     bxOffsetsFiller.addBx(bx, 1);
-  }  // loop on BXs
+    ++nPass;
+  }
 
   iEvent.put(std::move(ret), "selectedBx" + label);
-  // now we make the table
-  auto bxOffsets = bxOffsetsFiller.done();
-  auto tab = std::make_unique<l1ScoutingRun3::OrbitFlatTable>(bxOffsets, "Zdee" + label, true);
 
-  tab->addColumn<float>("mass", masses, "di-electron invariant mass");
+  auto bxOffsets = bxOffsetsFiller.done();
+  auto tab = std::make_unique<l1ScoutingRun3::OrbitFlatTable>(
+      bxOffsets, "Zdee" + label, true);
+
+  tab->addColumn<float>(
+      "mass", masses, "di-electron invariant mass");
 
   iEvent.put(std::move(tab), "zdee" + label);
 }
