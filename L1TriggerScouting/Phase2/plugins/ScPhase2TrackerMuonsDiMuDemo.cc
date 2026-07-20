@@ -34,7 +34,7 @@ private:
   void endStream() override;
   template <typename T>
   void runObj(const OrbitCollection<T> &src,
-              const OrbitCollection<l1Scouting::Puppi> &srcPuppi,
+              const OrbitCollection<l1Scouting::Puppi> &srcPF,
               edm::Event &out,
               unsigned long &nTry,
               unsigned long &nPass,
@@ -71,7 +71,7 @@ private:
 
 ScPhase2TrackerMuonDiMuDemo::ScPhase2TrackerMuonDiMuDemo(const edm::ParameterSet &iConfig)
     : structToken_(consumes<OrbitCollection<l1Scouting::TrackerMuon>>(iConfig.getParameter<edm::InputTag>("src"))),
-      puppiToken_(consumes<OrbitCollection<l1Scouting::Puppi>>(iConfig.getParameter<edm::InputTag>("srcPuppi"))) {
+      puppiToken_(consumes<OrbitCollection<l1Scouting::Puppi>>(iConfig.getParameter<edm::InputTag>("srcPF"))) {
   produces<std::vector<unsigned>>("selectedBx");
   produces<l1ScoutingRun3::OrbitFlatTable>("dimu");
   auto ptMin = iConfig.getParameter<std::vector<double>>("ptMin");
@@ -100,10 +100,10 @@ void ScPhase2TrackerMuonDiMuDemo::beginStream(edm::StreamID) {
 
 void ScPhase2TrackerMuonDiMuDemo::produce(edm::Event &iEvent, const edm::EventSetup &iSetup) {
   edm::Handle<OrbitCollection<l1Scouting::TrackerMuon>> src;
-  edm::Handle<OrbitCollection<l1Scouting::Puppi>> srcPuppi;
+  edm::Handle<OrbitCollection<l1Scouting::Puppi>> srcPF;
   iEvent.getByToken(structToken_, src);
-  iEvent.getByToken(puppiToken_, srcPuppi);
-  runObj(*src, *srcPuppi, iEvent, countStruct_, passStruct_, "");
+  iEvent.getByToken(puppiToken_, srcPF);
+  runObj(*src, *srcPF, iEvent, countStruct_, passStruct_, "");
 }
 
 void ScPhase2TrackerMuonDiMuDemo::endStream() {
@@ -113,7 +113,7 @@ void ScPhase2TrackerMuonDiMuDemo::endStream() {
 
 template <typename T>
 void ScPhase2TrackerMuonDiMuDemo::runObj(const OrbitCollection<T> &src,
-                                         const OrbitCollection<l1Scouting::Puppi> &srcPuppi,
+                                         const OrbitCollection<l1Scouting::Puppi> &srcPF,
                                          edm::Event &iEvent,
                                          unsigned long &nTry,
                                          unsigned long &nPass,
@@ -132,7 +132,7 @@ void ScPhase2TrackerMuonDiMuDemo::runObj(const OrbitCollection<T> &src,
     auto size = range.size();
     const T *cands = (size > 0) ? &range.front() : nullptr;
 
-    auto puppiRange = srcPuppi.bxIterator(bx);
+    auto puppiRange = srcPF.bxIterator(bx);
     auto puppiSize = puppiRange.size();
     const l1Scouting::Puppi *puppiCands = (puppiSize > 0) ? &puppiRange.front() : nullptr;
 
@@ -230,7 +230,7 @@ void ScPhase2TrackerMuonDiMuDemo::fillDescriptions(edm::ConfigurationDescription
   desc.add<bool>("oppositeCharge", true);
   desc.add<double>("dzMax", 0.5);
   desc.add<double>("minptOverMass", 0.25);
-  desc.add<edm::InputTag>("srcPuppi");
+  desc.add<edm::InputTag>("srcPF");
   desc.add<double>("relIsoMax", 0.4);
   desc.add<double>("isolationMinDeltaR", 0.02);
   desc.add<double>("isolationMaxDeltaR", 0.4);
