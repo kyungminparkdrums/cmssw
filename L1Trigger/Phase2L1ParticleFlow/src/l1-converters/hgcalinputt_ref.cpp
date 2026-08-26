@@ -219,7 +219,8 @@ bool l1ct::HgcalClusterDecoderEmulator::MultiClassID::evaluate(l1ct::HadCaloObjE
   }
   bool passPu = (sm_scores[0] >= wp_PU_[pt_bin]);
   // bool passPi = (sm_scores[1] >= wp_Pi_[pt_bin]);  // FIXME: where do we store this?
-  bool passPFEm = (sm_scores[2] >= wp_PFEm_[pt_bin]);
+  //bool passPFEm = (sm_scores[2] >= wp_PFEm_[pt_bin]);
+  bool passPFEm = (sm_scores[2] >= sm_scores[1]);
   bool passEgEm = (sm_scores[2] >= wp_EgEm_[pt_bin]);
   bool passEgEm_tight = (sm_scores[2] >= wp_EgEm_tight_[pt_bin]);
 
