@@ -191,20 +191,20 @@ l1tLayer1HGCal = cms.EDProducer("L1TCorrelatorLayer1Producer",
             wp_eta = cms.vdouble(2.4), # eta bin edges for the WPs
             wps = cms.VPSet(
                 cms.PSet(
-                    wp_pt = cms.vdouble(20),
-                    wp_PU = cms.vdouble(0.33462133, 0.25283374),
-                    wp_Pi = cms.vdouble(0.26773010, 0.03898286),
-                    wp_PFEm = cms.vdouble(0.29812516, 0.42790125),
-                    wp_EgEm = cms.vdouble(0.29812516, 0.42790125),
-                    wp_EgEm_tight = cms.vdouble(0.76317512, 0.67921004),
+                    wp_pt = cms.vdouble(10, 20, 40),
+                    wp_PU = cms.vdouble(0.33, 0.33, 0.32, 0.33),
+                    wp_Pi = cms.vdouble(0.26773010, 0.26773010, 0.03898286, 0.03898286), # unused
+                    wp_PFEm = cms.vdouble(0.29812516, 0.29812516, 0.42790125, 0.42790125), # unused
+                    wp_EgEm = cms.vdouble(0.2947, 0.2957, 0.4478, 0.4424),
+                    wp_EgEm_tight = cms.vdouble(0.6065, 0.6065, 0.4478, 0.4424), # tight WP only for pt < 20 
                 ),
                 cms.PSet(
-                    wp_pt = cms.vdouble(20),
-                    wp_PU = cms.vdouble(0.42100209, 0.52275714),
-                    wp_Pi = cms.vdouble(0.12800815, 0.20509825),
-                    wp_PFEm = cms.vdouble(0.35924579, 0.67921004),
-                    wp_EgEm = cms.vdouble(0.35924579, 0.67921004),
-                    wp_EgEm_tight = cms.vdouble(0.76317512, 0.67921004),
+                    wp_pt = cms.vdouble(10, 20, 40),
+                    wp_PU = cms.vdouble(0.38, 0.40, 0.42, 0.50),
+                    wp_Pi = cms.vdouble(0.12800815, 0.12800815, 0.20509825, 0.20509825), # unused
+                    wp_PFEm = cms.vdouble(0.35924579, 0.35924579, 0.67921004, 0.67921004), # unused
+                    wp_EgEm = cms.vdouble(0.2971, 0.3463, 0.6792, 0.6780),
+                    wp_EgEm_tight = cms.vdouble(0.7632, 0.7632, 0.6792, 0.6780), # tight WP only for pt < 20
                 )
             ),
         ),
@@ -343,20 +343,20 @@ l1tLayer1HGCalNoTK = cms.EDProducer("L1TCorrelatorLayer1Producer",
             wp_eta = cms.vdouble(2.4), # eta bin edges for the WPs
             wps = cms.VPSet(
                 cms.PSet(
-                    wp_pt = cms.vdouble(20),
-                    wp_PU = cms.vdouble(0.33462133, 0.25283374),
-                    wp_Pi = cms.vdouble(0.26773010, 0.03898286),
-                    wp_PFEm = cms.vdouble(0.29812516, 0.42790125),
-                    wp_EgEm = cms.vdouble(0.29812516, 0.42790125),
-                    wp_EgEm_tight = cms.vdouble(0.76317512, 0.67921004),
+                    wp_pt = cms.vdouble(10, 20, 40),
+                    wp_PU = cms.vdouble(0.33, 0.33, 0.32, 0.33),
+                    wp_Pi = cms.vdouble(0.26773010, 0.26773010, 0.03898286, 0.03898286), # unused
+                    wp_PFEm = cms.vdouble(0.29812516, 0.29812516, 0.42790125, 0.42790125), # unused
+                    wp_EgEm = cms.vdouble(0.2947, 0.2957, 0.4478, 0.4424),
+                    wp_EgEm_tight = cms.vdouble(0.6065, 0.6065, 0.4478, 0.4424), # tight WP only for pt < 20 
                 ),
                 cms.PSet(
-                    wp_pt = cms.vdouble(20),
-                    wp_PU = cms.vdouble(0.42100209, 0.52275714),
-                    wp_Pi = cms.vdouble(0.12800815, 0.20509825),
-                    wp_PFEm = cms.vdouble(0.35924579, 0.67921004),
-                    wp_EgEm = cms.vdouble(0.35924579, 0.67921004),
-                    wp_EgEm_tight = cms.vdouble(0.76317512, 0.67921004),
+                    wp_pt = cms.vdouble(10, 20, 40),
+                    wp_PU = cms.vdouble(0.38, 0.40, 0.42, 0.50),
+                    wp_Pi = cms.vdouble(0.12800815, 0.12800815, 0.20509825, 0.20509825), # unused
+                    wp_PFEm = cms.vdouble(0.35924579, 0.35924579, 0.67921004, 0.67921004), # unused
+                    wp_EgEm = cms.vdouble(0.2971, 0.3463, 0.6792, 0.6780),
+                    wp_EgEm_tight = cms.vdouble(0.7632, 0.7632, 0.6792, 0.6780), # tight WP only for pt < 20
                 )
             ),
         ),
